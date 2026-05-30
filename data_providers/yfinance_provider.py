@@ -3,10 +3,15 @@ from __future__ import annotations
 from datetime import date, timedelta
 from typing import Sequence
 
+import logging
+
 import pandas as pd
 import yfinance as yf
 
 from data_providers.base import CandleData, MarketDataProvider, Timeframe
+
+# yfinance prints noisy "possibly delisted" messages via its own logger
+logging.getLogger("yfinance").setLevel(logging.CRITICAL)
 from utils.logger import get_logger
 from config import settings
 
@@ -100,9 +105,12 @@ class YFinanceProvider(MarketDataProvider):
     ) -> tuple[date, date] | tuple[None, None]:
         """Return (clamped_from, to_date) or (None, None) if entirely out of range."""
         earliest_allowed = date.today() - timedelta(days=_YF_MAX_DAYS[interval])
-        if to_date < earliest_allowed:
+        if to_date <= earliest_allowed:
             return None, None
         clamped_from = max(from_date, earliest_allowed)
+        # Need at least 1 day of range after clamping
+        if clamped_from >= to_date:
+            return None, None
         return clamped_from, to_date
 
     # ------------------------------------------------------------------
