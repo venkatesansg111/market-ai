@@ -1,0 +1,16 @@
+# Core database
+SQLAlchemy>=2.0.0
+psycopg2-binary>=2.9.9
+
+# Data providers
+yfinance>=0.2.40
+pandas>=2.2.0
+
+# Optional NSE provider (install if you want NSE direct feed)
+# nsepython>=2.9
+
+# Configuration
+python-dotenv>=1.0.0
+
+# Utilities
+requests>=2.31.0
