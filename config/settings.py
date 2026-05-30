@@ -50,9 +50,34 @@ class IngestionConfig:
 
 
 @dataclass
+class IndicatorConfig:
+    lookback_candles: int = field(
+        default_factory=lambda: int(os.getenv("INDICATOR_LOOKBACK", "250"))
+    )
+    batch_size: int = field(
+        default_factory=lambda: int(os.getenv("INDICATOR_BATCH_SIZE", "1000"))
+    )
+    vwap_session_start_hour: int = field(
+        default_factory=lambda: int(os.getenv("VWAP_SESSION_HOUR", "9"))
+    )
+    vwap_session_start_minute: int = field(
+        default_factory=lambda: int(os.getenv("VWAP_SESSION_MINUTE", "15"))
+    )
+
+
+@dataclass
+class SignalConfig:
+    min_confidence: int = field(
+        default_factory=lambda: int(os.getenv("SIGNAL_MIN_CONFIDENCE", "40"))
+    )
+
+
+@dataclass
 class Settings:
     db: DatabaseConfig = field(default_factory=DatabaseConfig)
     ingestion: IngestionConfig = field(default_factory=IngestionConfig)
+    indicators: IndicatorConfig = field(default_factory=IndicatorConfig)
+    signals: SignalConfig = field(default_factory=SignalConfig)
     log_level: str = field(default_factory=lambda: os.getenv("LOG_LEVEL", "INFO"))
     log_dir: Path = field(
         default_factory=lambda: Path(os.getenv("LOG_DIR", "logs"))
