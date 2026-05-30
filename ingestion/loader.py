@@ -78,9 +78,7 @@ def bulk_upsert(
         stmt = (
             pg_insert(MarketCandle)
             .values(batch)
-            .on_conflict_do_nothing(
-                index_elements=["instrument", "candle_time", "timeframe"]
-            )
+            .on_conflict_do_nothing()
         )
 
         try:

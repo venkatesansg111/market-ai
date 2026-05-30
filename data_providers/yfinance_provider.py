@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from typing import Sequence
 
 import pandas as pd
@@ -20,7 +20,7 @@ _YF_INTERVAL_MAP: dict[Timeframe, str] = {
     Timeframe.DAY_1: "1d",
 }
 
-# yfinance intraday data is limited to ~60 days for 1m, 730 days for others
+# Hard limits imposed by Yahoo Finance per timeframe
 _YF_MAX_DAYS: dict[Timeframe, int] = {
     Timeframe.MIN_1: 7,
     Timeframe.MIN_5: 60,
@@ -54,12 +54,20 @@ class YFinanceProvider(MarketDataProvider):
         to_date: date,
         interval: Timeframe,
     ) -> Sequence[CandleData]:
+        # Clamp the date range to what yfinance actually supports
+        effective_from, effective_to = self._clamp_range(from_date, to_date, interval)
+        if effective_from is None:
+            logger.debug(
+                "[%s] Skipping %s %s %s→%s — outside %d-day yfinance window",
+                self.provider_name(), symbol, interval.value,
+                from_date, to_date, _YF_MAX_DAYS[interval],
+            )
+            return []
+
         ticker_sym = _resolve_ticker(symbol)
         yf_interval = _YF_INTERVAL_MAP[interval]
-
-        # yfinance end date is exclusive
-        end = to_date.strftime("%Y-%m-%d")
-        start = from_date.strftime("%Y-%m-%d")
+        start = effective_from.strftime("%Y-%m-%d")
+        end = effective_to.strftime("%Y-%m-%d")
 
         logger.debug(
             "[%s] Fetching %s (%s) %s → %s interval=%s",
@@ -78,13 +86,24 @@ class YFinanceProvider(MarketDataProvider):
         )
 
         if df.empty:
-            logger.warning(
+            logger.debug(
                 "[%s] No data returned for %s %s %s→%s",
                 self.provider_name(), symbol, yf_interval, start, end,
             )
             return []
 
         return self._to_candles(df, symbol, interval)
+
+    @staticmethod
+    def _clamp_range(
+        from_date: date, to_date: date, interval: Timeframe
+    ) -> tuple[date, date] | tuple[None, None]:
+        """Return (clamped_from, to_date) or (None, None) if entirely out of range."""
+        earliest_allowed = date.today() - timedelta(days=_YF_MAX_DAYS[interval])
+        if to_date < earliest_allowed:
+            return None, None
+        clamped_from = max(from_date, earliest_allowed)
+        return clamped_from, to_date
 
     # ------------------------------------------------------------------
     # Private helpers
