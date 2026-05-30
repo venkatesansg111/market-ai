@@ -13,6 +13,11 @@ Phase 2 — Intelligence Pipeline:
     python main.py --mode signals                  # generate trade signals
     python main.py --mode pipeline                 # indicators + signals in sequence
     python main.py --mode replay --months 1        # historical replay through candle builder
+
+Phase 3 — Backtesting:
+    python main.py --mode backtest --instruments "NIFTY 50" --timeframes 1day
+    python main.py --mode backtest --strategy signal --capital 1000000
+    python main.py --mode backtest --from-date 2023-01-01 --to-date 2024-01-01
 """
 
 import argparse
@@ -37,7 +42,7 @@ def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Market AI — data and intelligence platform")
     parser.add_argument(
         "--mode",
-        choices=["ingest", "indicators", "signals", "pipeline", "replay"],
+        choices=["ingest", "indicators", "signals", "pipeline", "replay", "backtest"],
         default="ingest",
         help=(
             "Operating mode: "
@@ -45,7 +50,8 @@ def _parse_args() -> argparse.Namespace:
             "indicators (calculate technical indicators), "
             "signals (generate trade signals), "
             "pipeline (indicators + signals), "
-            "replay (historical candle replay through candle builder)"
+            "replay (historical candle replay through candle builder), "
+            "backtest (Phase 3 strategy backtesting)"
         ),
     )
     parser.add_argument(
@@ -69,6 +75,36 @@ def _parse_args() -> argparse.Namespace:
         type=int,
         default=settings.ingestion.history_months,
         help="How many months of history to fetch/replay",
+    )
+    # Phase 3 — backtest arguments
+    parser.add_argument(
+        "--strategy",
+        default="signal",
+        help="Backtest strategy name (default: signal)",
+    )
+    parser.add_argument(
+        "--capital",
+        type=float,
+        default=1_000_000.0,
+        help="Starting capital in INR (default: 1000000)",
+    )
+    parser.add_argument(
+        "--from-date",
+        dest="from_date",
+        default=None,
+        help="Backtest start date YYYY-MM-DD (default: 1 year ago)",
+    )
+    parser.add_argument(
+        "--to-date",
+        dest="to_date",
+        default=None,
+        help="Backtest end date YYYY-MM-DD (default: today)",
+    )
+    parser.add_argument(
+        "--run-name",
+        dest="run_name",
+        default="",
+        help="Optional backtest run name (auto-generated if blank)",
     )
     return parser.parse_args()
 
@@ -180,6 +216,65 @@ def _run_pipeline(args: argparse.Namespace) -> None:
     _run_signals(args)
 
 
+def _run_backtest(args: argparse.Namespace) -> None:
+    from datetime import datetime, timezone
+    from decimal import Decimal
+    from backtesting.backtest_engine import BacktestEngine
+    from backtesting.backtest_models import BacktestConfig
+    from backtesting.reporting import BacktestReporter
+
+    instruments = [i.strip() for i in args.instruments.split(",")]
+    timeframes = [tf.strip() for tf in args.timeframes.split(",")]
+
+    if len(instruments) != 1 or len(timeframes) != 1:
+        logger.error("Backtest mode requires exactly one instrument and one timeframe.")
+        sys.exit(1)
+
+    instrument = instruments[0]
+    timeframe = timeframes[0]
+
+    today = datetime.now(tz=timezone.utc).replace(tzinfo=None)
+    if args.from_date:
+        try:
+            start_date = datetime.strptime(args.from_date, "%Y-%m-%d")
+        except ValueError:
+            logger.error("--from-date must be YYYY-MM-DD, got: %s", args.from_date)
+            sys.exit(1)
+    else:
+        from utils.time_utils import history_start_date
+        start_date = history_start_date(months=12)
+
+    if args.to_date:
+        try:
+            end_date = datetime.strptime(args.to_date, "%Y-%m-%d")
+        except ValueError:
+            logger.error("--to-date must be YYYY-MM-DD, got: %s", args.to_date)
+            sys.exit(1)
+    else:
+        end_date = today
+
+    config = BacktestConfig(
+        instrument=instrument,
+        timeframe=timeframe,
+        start_date=start_date,
+        end_date=end_date,
+        starting_capital=Decimal(str(args.capital)),
+        strategy_name=args.strategy,
+        run_name=args.run_name,
+    )
+
+    logger.info("=" * 55)
+    logger.info("  Market AI — Backtesting Engine")
+    logger.info("=" * 55)
+
+    engine = BacktestEngine()
+    result = engine.run(config)
+
+    reporter = BacktestReporter(result)
+    paths = reporter.save()
+    logger.info("Reports saved: %s", {k: str(v) for k, v in paths.items()})
+
+
 def _run_replay(args: argparse.Namespace) -> None:
     from realtime.candle_manager import CandleManager
     from realtime.candle_persistence import CandlePersistenceService
@@ -226,6 +321,7 @@ def main() -> None:
         "signals": _run_signals,
         "pipeline": _run_pipeline,
         "replay": _run_replay,
+        "backtest": _run_backtest,
     }
     dispatch[args.mode](args)
 
