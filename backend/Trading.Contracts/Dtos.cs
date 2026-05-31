@@ -222,3 +222,32 @@ public record RegimeEntry(
     DateTime StartTime,
     DateTime? EndTime
 );
+
+// ── Options Chain ─────────────────────────────────────────────────────────────
+public record OptionLegDto(
+    long Oi, long OiChange, long Volume,
+    double Iv, decimal Ltp, decimal NetChange,
+    long BidQty, decimal Bid, decimal Ask, long AskQty,
+    decimal Delta, decimal Gamma, decimal Theta, decimal Vega
+);
+
+public record OptionsChainRowDto(
+    decimal Strike, bool IsAtm, bool IsCeItm, bool IsPeItm,
+    OptionLegDto Ce, OptionLegDto Pe
+);
+
+public record OptionsChainDto(
+    string Symbol, decimal SpotPrice, string Expiry,
+    decimal AtmStrike, List<OptionsChainRowDto> Rows
+);
+
+public record OptionsExpiryDto(string Expiry, string Label, string ExpiryType);
+
+// ── AI Predictions ────────────────────────────────────────────────────────────
+public record PredictionDto(
+    string Symbol, string Signal, string OptionType,
+    decimal Strike, string Expiry, double Confidence,
+    string Regime, decimal TargetPrice, decimal StopLoss,
+    string Timeframe, double ExpectedReturn, double RiskReward,
+    string Reason, DateTime GeneratedAt
+);

@@ -1,0 +1,16 @@
+/Users/venkatesansg/market-ai/backend/Trading.Domain/bin/Release/net10.0/Trading.Domain.deps.json
+/Users/venkatesansg/market-ai/backend/Trading.Domain/bin/Release/net10.0/Trading.Domain.dll
+/Users/venkatesansg/market-ai/backend/Trading.Domain/bin/Release/net10.0/Trading.Domain.pdb
+/Users/venkatesansg/market-ai/backend/Trading.Domain/bin/Release/net10.0/Trading.Contracts.dll
+/Users/venkatesansg/market-ai/backend/Trading.Domain/bin/Release/net10.0/Trading.Contracts.pdb
+/Users/venkatesansg/market-ai/backend/Trading.Domain/obj/Release/net10.0/Trading.Domain.csproj.AssemblyReference.cache
+/Users/venkatesansg/market-ai/backend/Trading.Domain/obj/Release/net10.0/Trading.Domain.GeneratedMSBuildEditorConfig.editorconfig
+/Users/venkatesansg/market-ai/backend/Trading.Domain/obj/Release/net10.0/Trading.Domain.AssemblyInfoInputs.cache
+/Users/venkatesansg/market-ai/backend/Trading.Domain/obj/Release/net10.0/Trading.Domain.AssemblyInfo.cs
+/Users/venkatesansg/market-ai/backend/Trading.Domain/obj/Release/net10.0/Trading.Domain.csproj.CoreCompileInputs.cache
+/Users/venkatesansg/market-ai/backend/Trading.Domain/obj/Release/net10.0/Trading.Domain.sourcelink.json
+/Users/venkatesansg/market-ai/backend/Trading.Domain/obj/Release/net10.0/Trading..C90968AB.Up2Date
+/Users/venkatesansg/market-ai/backend/Trading.Domain/obj/Release/net10.0/Trading.Domain.dll
+/Users/venkatesansg/market-ai/backend/Trading.Domain/obj/Release/net10.0/refint/Trading.Domain.dll
+/Users/venkatesansg/market-ai/backend/Trading.Domain/obj/Release/net10.0/Trading.Domain.pdb
+/Users/venkatesansg/market-ai/backend/Trading.Domain/obj/Release/net10.0/ref/Trading.Domain.dll

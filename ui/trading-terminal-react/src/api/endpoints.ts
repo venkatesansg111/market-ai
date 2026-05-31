@@ -87,6 +87,19 @@ export const pnlApi = {
   attribution: () => api.get('/api/pnl/attribution').then((r) => r.data),
 };
 
+export const optionsApi = {
+  symbols: () => api.get('/api/options/symbols').then((r) => r.data),
+  expiries: (symbol = 'NIFTY') => api.get(`/api/options/expiries?symbol=${symbol}`).then((r) => r.data),
+  chain: (symbol = 'NIFTY', expiry?: string) => {
+    const url = expiry ? `/api/options/chain?symbol=${symbol}&expiry=${expiry}` : `/api/options/chain?symbol=${symbol}`;
+    return api.get(url).then((r) => r.data);
+  },
+};
+
+export const predictionsApi = {
+  getAll: () => api.get('/api/predictions').then((r) => r.data),
+};
+
 export const adminApi = {
   enableStrategy: (name: string) => api.post('/api/admin/strategy/enable', { action: 'enable', target: name }).then((r) => r.data),
   disableStrategy: (name: string) => api.post('/api/admin/strategy/disable', { action: 'disable', target: name }).then((r) => r.data),

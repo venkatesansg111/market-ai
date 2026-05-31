@@ -257,44 +257,247 @@ public class MockAlertService : IAlertService
 
 public class MockMarketDataService : IMarketDataService
 {
-    private static readonly Random _rng = new(42);
     private static readonly string[] _nse = ["RELIANCE", "TCS", "INFY", "HDFCBANK", "ICICIBANK", "WIPRO", "BAJAJFINSV", "SBIN", "ITC", "KOTAKBANK"];
     private static readonly string[] _bse = ["SENSEX", "RELIANCE", "TCS", "INFY", "HDFCBANK", "ICICIBANK"];
+
+    private static readonly Dictionary<string, decimal> _basePrices = new()
+    {
+        ["RELIANCE"]   = 2850.00m, ["TCS"]        = 4052.75m, ["INFY"]       = 1521.40m,
+        ["HDFCBANK"]   = 1725.90m, ["ICICIBANK"]  = 1238.65m, ["WIPRO"]      = 582.30m,
+        ["BAJAJFINSV"] = 1682.45m, ["SBIN"]       = 812.80m,  ["ITC"]        = 478.25m,
+        ["KOTAKBANK"]  = 1876.10m, ["SENSEX"]     = 80540.00m,["NIFTY50"]    = 24502.55m,
+    };
+    private static readonly Dictionary<string, decimal> _prevClose = new()
+    {
+        ["RELIANCE"]   = 2823.50m, ["TCS"]        = 4028.00m, ["INFY"]       = 1498.20m,
+        ["HDFCBANK"]   = 1701.30m, ["ICICIBANK"]  = 1219.80m, ["WIPRO"]      = 574.55m,
+        ["BAJAJFINSV"] = 1655.90m, ["SBIN"]       = 799.40m,  ["ITC"]        = 472.10m,
+        ["KOTAKBANK"]  = 1851.70m, ["SENSEX"]     = 79830.00m,["NIFTY50"]    = 24180.00m,
+    };
+
+    private static decimal StablePrice(string symbol)
+    {
+        var seed = (symbol + DateTime.UtcNow.ToString("yyyyMMddHHmm")).GetHashCode();
+        var rng  = new Random(seed);
+        var base_ = _basePrices.GetValueOrDefault(symbol, 1000m);
+        return Math.Round(base_ * (1m + (decimal)(rng.NextDouble() * 0.014 - 0.007)), 2);
+    }
 
     public Task<List<WatchlistItemDto>> GetWatchlistAsync(string exchange = "NSE")
     {
         var symbols = exchange.Equals("BSE", StringComparison.OrdinalIgnoreCase) ? _bse : _nse;
-        var items = symbols.Select(s => new WatchlistItemDto(
-            Symbol: s,
-            Price: 1000m + (decimal)(_rng.NextDouble() * 3000),
-            ChangePercent: _rng.NextDouble() * 4 - 2,
-            Volume: _rng.NextInt64(500_000, 5_000_000),
-            High:  1000m + (decimal)(_rng.NextDouble() * 3100),
-            Low:   900m  + (decimal)(_rng.NextDouble() * 2900)
-        )).ToList();
+        var items = symbols.Select(s =>
+        {
+            var price = StablePrice(s);
+            var prev  = _prevClose.GetValueOrDefault(s, price * 0.99m);
+            var chg   = (double)((price - prev) / prev * 100);
+            var seed2 = (s + "vol" + DateTime.UtcNow.ToString("yyyyMMddHH")).GetHashCode();
+            var rng2  = new Random(seed2);
+            return new WatchlistItemDto(
+                Symbol: s, Price: price,
+                ChangePercent: Math.Round(chg, 2),
+                Volume: rng2.NextInt64(500_000, 5_000_000),
+                High: Math.Round(price * 1.008m, 2),
+                Low:  Math.Round(price * 0.992m, 2)
+            );
+        }).ToList();
         return Task.FromResult(items);
     }
 
     public Task<List<CandleDto>> GetCandlesAsync(string symbol, string timeframe, int limit = 100)
     {
+        var seed = (symbol + timeframe).GetHashCode();
+        var rng  = new Random(seed);
         var candles = new List<CandleDto>();
-        var price = 2000m + (decimal)(_rng.NextDouble() * 1000);
+        var basePrice = _basePrices.GetValueOrDefault(symbol, 2000m);
+        var price = basePrice * 0.97m;
+        var minuteStep = timeframe switch { "5m" => 5, "15m" => 15, "1h" => 60, "1D" => 1440, _ => 1 };
         for (int i = limit; i >= 0; i--)
         {
-            var t = DateTime.UtcNow.AddMinutes(-i);
+            var t  = DateTime.UtcNow.AddMinutes(-(i * minuteStep));
+            // Deterministic jitter seeded by candle index so history is stable
+            var cseed = (symbol + timeframe + i.ToString()).GetHashCode();
+            var crng  = new Random(cseed);
+            var move  = (decimal)(crng.NextDouble() * 0.008 - 0.003);
+            price += price * move;
             var o = price;
-            var c = o + (decimal)(_rng.NextDouble() * 40 - 20);
-            var h = Math.Max(o, c) + (decimal)(_rng.NextDouble() * 10);
-            var l = Math.Min(o, c) - (decimal)(_rng.NextDouble() * 10);
-            candles.Add(new CandleDto(symbol, timeframe, o, h, l, c, _rng.NextInt64(1000, 50000), t));
+            var c = price + price * (decimal)(crng.NextDouble() * 0.006 - 0.003);
+            var h = Math.Max(o, c) + price * (decimal)(crng.NextDouble() * 0.003);
+            var l = Math.Min(o, c) - price * (decimal)(crng.NextDouble() * 0.003);
+            candles.Add(new CandleDto(symbol, timeframe,
+                Math.Round(o, 2), Math.Round(h, 2), Math.Round(l, 2), Math.Round(c, 2),
+                crng.NextInt64(5_000, 150_000), t));
             price = c;
         }
         return Task.FromResult(candles);
     }
 
-    public Task<TickDto?> GetLatestTickAsync(string symbol) => Task.FromResult<TickDto?>(
-        new TickDto(symbol, 2850m, 123_456, 2849.5m, 2850.5m, DateTime.UtcNow)
-    );
+    public Task<TickDto?> GetLatestTickAsync(string symbol)
+    {
+        var price = StablePrice(symbol);
+        return Task.FromResult<TickDto?>(
+            new TickDto(symbol, price, 123_456, price - 0.5m, price + 0.5m, DateTime.UtcNow));
+    }
+}
+
+// ── Options Chain ────────────────────────────────────────────────────────────
+public class MockOptionsService : IOptionsService
+{
+    private static readonly Dictionary<string, decimal> _spotPrices = new()
+    {
+        ["NIFTY"] = 24502.55m, ["BANKNIFTY"] = 51486.40m,
+        ["FINNIFTY"] = 23812.80m, ["MIDCPNIFTY"] = 12204.55m,
+    };
+    private static readonly Dictionary<string, decimal> _strikeIntervals = new()
+    {
+        ["NIFTY"] = 50m, ["BANKNIFTY"] = 100m, ["FINNIFTY"] = 50m, ["MIDCPNIFTY"] = 25m,
+    };
+
+    public Task<List<string>> GetOptionableSymbolsAsync() =>
+        Task.FromResult(new List<string> { "NIFTY", "BANKNIFTY", "FINNIFTY", "MIDCPNIFTY" });
+
+    public Task<List<OptionsExpiryDto>> GetExpiriesAsync(string symbol)
+    {
+        var expiries = new List<OptionsExpiryDto>();
+        var today    = DateTime.Today;
+        // 4 weekly expiries
+        var cur = today;
+        for (int i = 0; i < 4; i++)
+        {
+            cur = NextThursday(cur.AddDays(i == 0 ? 0 : 1));
+            expiries.Add(new OptionsExpiryDto(cur.ToString("yyyy-MM-dd"), cur.ToString("dd MMM''yy"), "weekly"));
+            cur = cur.AddDays(1);
+        }
+        // 2 monthly expiries (last Thursday of next 2 months)
+        for (int m = 1; m <= 2; m++)
+        {
+            var month = new DateTime(today.Year, today.Month, 1).AddMonths(m);
+            var lastDay = new DateTime(month.Year, month.Month, DateTime.DaysInMonth(month.Year, month.Month));
+            while (lastDay.DayOfWeek != DayOfWeek.Thursday) lastDay = lastDay.AddDays(-1);
+            if (!expiries.Any(e => e.Expiry == lastDay.ToString("yyyy-MM-dd")))
+                expiries.Add(new OptionsExpiryDto(lastDay.ToString("yyyy-MM-dd"), lastDay.ToString("dd MMM''yy") + " (Monthly)", "monthly"));
+        }
+        return Task.FromResult(expiries);
+    }
+
+    public Task<OptionsChainDto> GetOptionsChainAsync(string symbol, string expiry)
+    {
+        var baseSpot  = _spotPrices.GetValueOrDefault(symbol, 24500m);
+        var interval  = _strikeIntervals.GetValueOrDefault(symbol, 50m);
+        // Small stable jitter on spot
+        var spotSeed  = (symbol + DateTime.UtcNow.ToString("yyyyMMddHHmm")).GetHashCode();
+        var spotRng   = new Random(spotSeed);
+        var spot      = baseSpot + (decimal)(spotRng.NextDouble() * (double)interval * 0.6 - (double)interval * 0.3);
+        spot          = Math.Round(spot, 2);
+        var atmStrike = Math.Round(spot / interval) * interval;
+        var expiryDate = DateTime.TryParse(expiry, out var ed) ? ed : DateTime.Today.AddDays(7);
+        var daysToExpiry = Math.Max(1, (expiryDate - DateTime.Today).Days);
+        var t = daysToExpiry / 365.0;
+
+        var rows = new List<OptionsChainRowDto>();
+        for (var strike = atmStrike - interval * 30; strike <= atmStrike + interval * 30; strike += interval)
+            rows.Add(GenerateRow(symbol, expiry, spot, strike, atmStrike, t));
+
+        return Task.FromResult(new OptionsChainDto(symbol, spot, expiry, atmStrike, rows));
+    }
+
+    private static OptionsChainRowDto GenerateRow(string symbol, string expiry, decimal spot, decimal strike, decimal atmStrike, double t)
+    {
+        var seed = (symbol + expiry + strike.ToString()).GetHashCode();
+        var rng  = new Random(seed);
+        var sqrtT = Math.Sqrt(t);
+        var r = 0.065;
+        var moneyness = Math.Log((double)spot / (double)strike);
+
+        // IV smile: puts OTM have higher IV (put skew)
+        var atmIv = 0.15 + (double)Math.Abs(strike - atmStrike) / (double)atmStrike * 2.0;
+        var ceIv  = atmIv + Math.Max(0, -moneyness) * 0.05;
+        var peIv  = atmIv + Math.Max(0,  moneyness) * 0.10 + 0.01;
+
+        double CeDelta, PeDelta, Gamma, CeTheta, PeTheta, Vega, CeLtp, PeLtp;
+        ComputeBS((double)spot, (double)strike, t, r, ceIv, peIv, sqrtT,
+            out CeDelta, out PeDelta, out Gamma, out CeTheta, out PeTheta, out Vega, out CeLtp, out PeLtp);
+
+        // OI: peak at ATM
+        var dist = Math.Abs((double)(strike - atmStrike) / (double)atmStrike);
+        var oiBase = (long)(8_00_000 * Math.Exp(-dist * 18));
+        var ceOi = oiBase + rng.NextInt64(0, Math.Max(1, oiBase / 8));
+        var peOi = (long)(oiBase * 1.15) + rng.NextInt64(0, Math.Max(1, oiBase / 8));
+        var ceOiChg = (long)(rng.NextInt64(-200_000, 400_000));
+        var peOiChg = (long)(rng.NextInt64(-200_000, 400_000));
+        var ceVol = ceOi / 12 + rng.NextInt64(0, 5000);
+        var peVol = peOi / 12 + rng.NextInt64(0, 5000);
+        var ceChg = (decimal)Math.Round(rng.NextDouble() * 30 - 10, 2);
+        var peChg = (decimal)Math.Round(rng.NextDouble() * 30 - 10, 2);
+        var ltpCe = Math.Max(0.05m, Math.Round((decimal)CeLtp, 2));
+        var ltpPe = Math.Max(0.05m, Math.Round((decimal)PeLtp, 2));
+
+        var ce = new OptionLegDto(ceOi, ceOiChg, ceVol, Math.Round(ceIv * 100, 2), ltpCe, ceChg,
+            rng.NextInt64(50, 3000), Math.Max(0.05m, ltpCe - 0.5m), ltpCe + 0.5m, rng.NextInt64(50, 3000),
+            Math.Round((decimal)CeDelta, 4), Math.Round((decimal)Gamma, 6),
+            Math.Round((decimal)CeTheta, 2), Math.Round((decimal)Vega, 2));
+        var pe = new OptionLegDto(peOi, peOiChg, peVol, Math.Round(peIv * 100, 2), ltpPe, peChg,
+            rng.NextInt64(50, 3000), Math.Max(0.05m, ltpPe - 0.5m), ltpPe + 0.5m, rng.NextInt64(50, 3000),
+            Math.Round((decimal)PeDelta, 4), Math.Round((decimal)Gamma, 6),
+            Math.Round((decimal)PeTheta, 2), Math.Round((decimal)Vega, 2));
+
+        return new OptionsChainRowDto(strike, strike == atmStrike, strike < spot, strike > spot, ce, pe);
+    }
+
+    private static void ComputeBS(double S, double K, double T, double r, double ceIv, double peIv, double sqrtT,
+        out double CeDelta, out double PeDelta, out double Gamma, out double CeTheta, out double PeTheta, out double Vega,
+        out double CeLtp, out double PeLtp)
+    {
+        var d1c = (Math.Log(S / K) + (r + ceIv * ceIv / 2) * T) / (ceIv * sqrtT);
+        var d2c = d1c - ceIv * sqrtT;
+        var d1p = (Math.Log(S / K) + (r + peIv * peIv / 2) * T) / (peIv * sqrtT);
+        var d2p = d1p - peIv * sqrtT;
+        CeDelta = Ncdf(d1c);
+        PeDelta = Ncdf(d1p) - 1.0;
+        Gamma   = Npdf(d1c) / (S * ceIv * sqrtT);
+        var expRt = Math.Exp(-r * T);
+        CeLtp   = S * Ncdf(d1c) - K * expRt * Ncdf(d2c);
+        PeLtp   = K * expRt * Ncdf(-d2p) - S * Ncdf(-d1p);
+        CeTheta = -(S * Npdf(d1c) * ceIv) / (2 * sqrtT * 365) - r * K * expRt * Ncdf(d2c) / 365;
+        PeTheta = -(S * Npdf(d1p) * peIv) / (2 * sqrtT * 365) + r * K * expRt * Ncdf(-d2p) / 365;
+        Vega    = S * Npdf(d1c) * sqrtT * 0.01;
+        CeLtp   = Math.Max(Math.Max(0, S - K), CeLtp);
+        PeLtp   = Math.Max(Math.Max(0, K - S), PeLtp);
+    }
+
+    private static double Ncdf(double x)
+    {
+        const double a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741;
+        const double a4 = -1.453152027, a5 = 1.061405429, p = 0.3275911;
+        int sign = x < 0 ? -1 : 1;
+        x = Math.Abs(x) / Math.Sqrt(2.0);
+        var t = 1.0 / (1.0 + p * x);
+        var y = 1.0 - (((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t * Math.Exp(-x * x));
+        return 0.5 * (1.0 + sign * y);
+    }
+    private static double Npdf(double x) => Math.Exp(-0.5 * x * x) / Math.Sqrt(2 * Math.PI);
+
+    private static DateTime NextThursday(DateTime from)
+    {
+        int days = ((int)DayOfWeek.Thursday - (int)from.DayOfWeek + 7) % 7;
+        return from.AddDays(days == 0 ? 7 : days);
+    }
+}
+
+// ── AI Predictions ────────────────────────────────────────────────────────────
+public class MockPredictionService : IPredictionService
+{
+    public Task<List<PredictionDto>> GetPredictionsAsync() => Task.FromResult(new List<PredictionDto>
+    {
+        new("NIFTY",      "BUY",  "CE",    24600m, "2026-06-05", 0.87, "BULLISH",  24850m, 24400m, "1D",      8.2, 2.5, "RSI oversold recovery + EMA crossover. Heavy CE OI buildup at 24500.", DateTime.UtcNow),
+        new("BANKNIFTY",  "SELL", "PE",    51000m, "2026-06-05", 0.78, "BEARISH",  50750m, 51600m, "INTRADAY",4.5, 1.8, "Bearish engulfing on 15m. BANKNIFTY underperforming NIFTY. High PE OI at 51500.", DateTime.UtcNow),
+        new("RELIANCE",   "BUY",  "STOCK", 0m,     "",           0.74, "TRENDING", 3050m,  2940m,  "1D",      5.2, 1.6, "Breakout above resistance. High volume confirmation. Energy sector rotation.", DateTime.UtcNow),
+        new("NIFTY",      "BUY",  "CE",    24700m, "2026-06-05", 0.71, "BULLISH",  24950m, 24500m, "1W",      7.1, 2.2, "Weekly trend continuation. ATR expanding. 50-period MA acting as support.", DateTime.UtcNow),
+        new("INFY",       "SELL", "PE",    1550m,  "2026-06-05", 0.68, "BEARISH",  1490m,  1610m,  "1D",      6.3, 1.9, "Head and shoulders pattern forming. IT sector weakness. RSI divergence.", DateTime.UtcNow),
+        new("BANKNIFTY",  "BUY",  "CE",    52000m, "2026-06-05", 0.65, "RANGING",  52400m, 51600m, "INTRADAY",3.8, 1.5, "Support at 51500 holding. Stochastic RSI crossing up in oversold zone.", DateTime.UtcNow),
+        new("TCS",        "BUY",  "STOCK", 0m,     "",           0.63, "TRENDING", 4150m,  3950m,  "1W",      4.2, 1.4, "Channel breakout with volume. Q4 results beat. IT sector recovery.", DateTime.UtcNow),
+        new("HDFCBANK",   "SELL", "PE",    1700m,  "2026-06-05", 0.61, "BEARISH",  1650m,  1755m,  "1D",      3.5, 1.3, "Double top at 1750. Banking index weakness. FII outflow pressure.", DateTime.UtcNow),
+    });
 }
 
 public class MockPnLAttributionService : IPnLAttributionService

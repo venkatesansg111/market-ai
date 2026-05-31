@@ -44,7 +44,8 @@
       "Bash(npx tsc *)",
       "Bash(npm run *)",
       "Bash(npx vitest *)",
-      "Bash(.venv/bin/pytest tests/ -q --tb=no)"
+      "Bash(.venv/bin/pytest tests/ -q --tb=no)",
+      "Bash(docker-compose up *)"
     ]
   }
 }

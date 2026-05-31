@@ -74,6 +74,8 @@ builder.Services.AddScoped<IPnLAttributionService,  MockPnLAttributionService>()
 builder.Services.AddScoped<IAdminService,           MockAdminService>();
 builder.Services.AddScoped<IAuditService,           MockAuditService>();
 builder.Services.AddScoped<IAuthService,            JwtService>();
+builder.Services.AddScoped<IOptionsService,         MockOptionsService>();
+builder.Services.AddScoped<IPredictionService,      MockPredictionService>();
 
 builder.Services.AddHostedService<HubBroadcastService>();
 

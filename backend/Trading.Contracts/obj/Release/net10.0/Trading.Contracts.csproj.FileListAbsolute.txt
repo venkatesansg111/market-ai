@@ -1,0 +1,12 @@
+/Users/venkatesansg/market-ai/backend/Trading.Contracts/bin/Release/net10.0/Trading.Contracts.deps.json
+/Users/venkatesansg/market-ai/backend/Trading.Contracts/bin/Release/net10.0/Trading.Contracts.dll
+/Users/venkatesansg/market-ai/backend/Trading.Contracts/bin/Release/net10.0/Trading.Contracts.pdb
+/Users/venkatesansg/market-ai/backend/Trading.Contracts/obj/Release/net10.0/Trading.Contracts.GeneratedMSBuildEditorConfig.editorconfig
+/Users/venkatesansg/market-ai/backend/Trading.Contracts/obj/Release/net10.0/Trading.Contracts.AssemblyInfoInputs.cache
+/Users/venkatesansg/market-ai/backend/Trading.Contracts/obj/Release/net10.0/Trading.Contracts.AssemblyInfo.cs
+/Users/venkatesansg/market-ai/backend/Trading.Contracts/obj/Release/net10.0/Trading.Contracts.csproj.CoreCompileInputs.cache
+/Users/venkatesansg/market-ai/backend/Trading.Contracts/obj/Release/net10.0/Trading.Contracts.sourcelink.json
+/Users/venkatesansg/market-ai/backend/Trading.Contracts/obj/Release/net10.0/Trading.Contracts.dll
+/Users/venkatesansg/market-ai/backend/Trading.Contracts/obj/Release/net10.0/refint/Trading.Contracts.dll
+/Users/venkatesansg/market-ai/backend/Trading.Contracts/obj/Release/net10.0/Trading.Contracts.pdb
+/Users/venkatesansg/market-ai/backend/Trading.Contracts/obj/Release/net10.0/ref/Trading.Contracts.dll

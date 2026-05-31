@@ -94,6 +94,18 @@ public interface IAuditService
     Task<List<AuditLogEntry>> GetLogsAsync(int limit = 100);
 }
 
+public interface IOptionsService
+{
+    Task<List<string>> GetOptionableSymbolsAsync();
+    Task<List<OptionsExpiryDto>> GetExpiriesAsync(string symbol);
+    Task<OptionsChainDto> GetOptionsChainAsync(string symbol, string expiry);
+}
+
+public interface IPredictionService
+{
+    Task<List<PredictionDto>> GetPredictionsAsync();
+}
+
 public record AuditLogEntry(
     string Id,
     string UserId,

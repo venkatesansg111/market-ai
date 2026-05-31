@@ -10,6 +10,7 @@ import Layout from './components/Layout';
 import LoginPage      from './pages/LoginPage';
 import DashboardPage  from './pages/DashboardPage';
 import MarketPage     from './pages/MarketPage';
+import OptionsPage    from './pages/OptionsPage';
 import StrategiesPage from './pages/StrategiesPage';
 import RiskPage       from './pages/RiskPage';
 import OrdersPage     from './pages/OrdersPage';
@@ -40,6 +41,7 @@ function AppRoutes() {
               <Routes>
                 <Route path="/"          element={<DashboardPage />} />
                 <Route path="/market"    element={<MarketPage />} />
+                <Route path="/options"   element={<OptionsPage />} />
                 <Route path="/strategies"element={<StrategiesPage />} />
                 <Route path="/risk"      element={<RiskPage />} />
                 <Route path="/orders"    element={<OrdersPage />} />

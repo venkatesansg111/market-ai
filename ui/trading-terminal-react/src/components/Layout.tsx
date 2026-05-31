@@ -8,6 +8,7 @@ import {
   AccountBalance, Assessment, BarChart,
   Dashboard, HealthAndSafety, Logout,
   Menu, Notifications, PlayArrow, Security, ShoppingCart, TrendingUp,
+  CandlestickChart,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store';
@@ -18,6 +19,7 @@ const DRAWER_WIDTH = 220;
 const navItems = [
   { label: 'Dashboard',    path: '/',           icon: <Dashboard /> },
   { label: 'Market',       path: '/market',     icon: <TrendingUp /> },
+  { label: 'Options Chain',path: '/options',    icon: <CandlestickChart /> },
   { label: 'Strategies',   path: '/strategies', icon: <Assessment /> },
   { label: 'Risk',         path: '/risk',       icon: <Security /> },
   { label: 'Orders',       path: '/orders',     icon: <ShoppingCart /> },
