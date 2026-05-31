@@ -103,9 +103,8 @@ class BacktestEngine:
             current_price = Decimal(str(float(row["close"])))
             indicator = self._row_to_indicator(row, config.instrument, config.timeframe, candle_time)
 
-            # Keep strategy's position state in sync
-            if isinstance(strategy, SignalToTradeAdapter):
-                strategy.set_position_state(portfolio.has_open_position)
+            # Keep strategy's position state in sync (no-op for stateless strategies)
+            strategy.set_position_state(portfolio.has_open_position)
 
             action = strategy.generate_signal(indicator, current_price)
 
@@ -263,10 +262,18 @@ class BacktestEngine:
         name = config.strategy_name.lower()
         if name == "signal":
             return SignalToTradeAdapter()
-        raise ValueError(
-            f"Unknown strategy '{config.strategy_name}'. "
-            "Available strategies: 'signal'"
-        )
+        # Delegate to the Phase 4 strategy registry
+        from strategies.registry import get_strategy, list_strategies
+        from strategies.backtest_adapter import StrategyBacktestAdapter
+        try:
+            strat = get_strategy(name)
+            return StrategyBacktestAdapter(strat)
+        except KeyError:
+            available = ["signal"] + list_strategies()
+            raise ValueError(
+                f"Unknown strategy '{config.strategy_name}'. "
+                f"Available strategies: {', '.join(available)}"
+            )
 
     # ------------------------------------------------------------------
     # Database persistence

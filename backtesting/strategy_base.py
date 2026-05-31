@@ -36,6 +36,14 @@ class Strategy(ABC):
             TradeAction.HOLD       — no action
         """
 
+    def set_position_state(self, has_open_position: bool) -> None:
+        """Called by BacktestEngine before each bar to sync portfolio position state.
+
+        Override in stateful strategies (e.g. SignalToTradeAdapter, StrategyBacktestAdapter)
+        that need to know whether a position is open before deciding TradeAction.
+        Default implementation is a no-op — safe for stateless strategies.
+        """
+
     def on_backtest_start(self) -> None:
         """Called once before the backtest loop begins. Override for setup."""
 

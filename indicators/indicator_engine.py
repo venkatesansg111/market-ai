@@ -11,6 +11,14 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from config import settings
 from database.connection import get_session
 from database.models import MarketCandle, MarketIndicator
+from indicators.advanced_calculators import (
+    calculate_adx,
+    calculate_atr,
+    calculate_bollinger_bands,
+    calculate_obv,
+    calculate_stoch_rsi,
+    calculate_supertrend,
+)
 from indicators.indicator_calculators import (
     calculate_ema,
     calculate_macd,
@@ -169,6 +177,8 @@ class IndicatorEngineService:
     def _calculate_all(self, df: pd.DataFrame) -> pd.DataFrame:
         closes = df["close"]
         df = df.copy()
+
+        # ── Phase 1 indicators ───────────────────────────────────────────
         df["ema20"] = calculate_ema(closes, 20)
         df["ema50"] = calculate_ema(closes, 50)
         df["ema200"] = calculate_ema(closes, 200)
@@ -177,6 +187,33 @@ class IndicatorEngineService:
         macd_line, signal_line = calculate_macd(closes)
         df["macd"] = macd_line
         df["macd_signal"] = signal_line
+
+        # ── Phase 4B advanced indicators ─────────────────────────────────
+        price_df = df[["high", "low", "close"]]
+
+        df["atr_14"] = calculate_atr(price_df, 14)
+
+        adx, plus_di, minus_di = calculate_adx(price_df, 14)
+        df["adx_14"] = adx
+        df["plus_di"] = plus_di
+        df["minus_di"] = minus_di
+
+        bb_middle, bb_upper, bb_lower, bb_width = calculate_bollinger_bands(closes, 20)
+        df["bb_middle"] = bb_middle
+        df["bb_upper"] = bb_upper
+        df["bb_lower"] = bb_lower
+        df["bb_width"] = bb_width
+
+        st, st_dir = calculate_supertrend(price_df, 10, 3.0)
+        df["supertrend"] = st
+        df["supertrend_direction"] = st_dir
+
+        df["obv"] = calculate_obv(closes, df["volume"])
+
+        stoch_k, stoch_d = calculate_stoch_rsi(closes, 14, 14)
+        df["stoch_rsi_k"] = stoch_k
+        df["stoch_rsi_d"] = stoch_d
+
         return df
 
     def _df_to_records(
@@ -187,11 +224,18 @@ class IndicatorEngineService:
                 return None
             return Decimal(str(round(float(v), 6)))
 
+        def to_int_dir(v) -> Optional[int]:
+            """Convert supertrend direction float to int, or None if NaN."""
+            if v is None or (isinstance(v, float) and pd.isna(v)):
+                return None
+            return int(v)
+
         return [
             IndicatorRecord(
                 instrument=instrument,
                 candle_time=ts.to_pydatetime(),
                 timeframe=timeframe,
+                # Phase 1
                 ema20=to_dec(row.get("ema20")),
                 ema50=to_dec(row.get("ema50")),
                 ema200=to_dec(row.get("ema200")),
@@ -199,6 +243,20 @@ class IndicatorEngineService:
                 vwap=to_dec(row.get("vwap")),
                 macd=to_dec(row.get("macd")),
                 macd_signal=to_dec(row.get("macd_signal")),
+                # Phase 4B
+                atr_14=to_dec(row.get("atr_14")),
+                adx_14=to_dec(row.get("adx_14")),
+                plus_di=to_dec(row.get("plus_di")),
+                minus_di=to_dec(row.get("minus_di")),
+                bb_middle=to_dec(row.get("bb_middle")),
+                bb_upper=to_dec(row.get("bb_upper")),
+                bb_lower=to_dec(row.get("bb_lower")),
+                bb_width=to_dec(row.get("bb_width")),
+                supertrend=to_dec(row.get("supertrend")),
+                supertrend_direction=to_int_dir(row.get("supertrend_direction")),
+                obv=to_dec(row.get("obv")),
+                stoch_rsi_k=to_dec(row.get("stoch_rsi_k")),
+                stoch_rsi_d=to_dec(row.get("stoch_rsi_d")),
             )
             for ts, row in df.iterrows()
         ]
@@ -216,6 +274,7 @@ class IndicatorEngineService:
                 "instrument": r.instrument,
                 "candle_time": r.candle_time,
                 "timeframe": r.timeframe,
+                # Phase 1
                 "ema20": float(r.ema20) if r.ema20 is not None else None,
                 "ema50": float(r.ema50) if r.ema50 is not None else None,
                 "ema200": float(r.ema200) if r.ema200 is not None else None,
@@ -223,6 +282,20 @@ class IndicatorEngineService:
                 "vwap": float(r.vwap) if r.vwap is not None else None,
                 "macd": float(r.macd) if r.macd is not None else None,
                 "macd_signal": float(r.macd_signal) if r.macd_signal is not None else None,
+                # Phase 4B
+                "atr_14": float(r.atr_14) if r.atr_14 is not None else None,
+                "adx_14": float(r.adx_14) if r.adx_14 is not None else None,
+                "plus_di": float(r.plus_di) if r.plus_di is not None else None,
+                "minus_di": float(r.minus_di) if r.minus_di is not None else None,
+                "bb_middle": float(r.bb_middle) if r.bb_middle is not None else None,
+                "bb_upper": float(r.bb_upper) if r.bb_upper is not None else None,
+                "bb_lower": float(r.bb_lower) if r.bb_lower is not None else None,
+                "bb_width": float(r.bb_width) if r.bb_width is not None else None,
+                "supertrend": float(r.supertrend) if r.supertrend is not None else None,
+                "supertrend_direction": r.supertrend_direction,
+                "obv": float(r.obv) if r.obv is not None else None,
+                "stoch_rsi_k": float(r.stoch_rsi_k) if r.stoch_rsi_k is not None else None,
+                "stoch_rsi_d": float(r.stoch_rsi_d) if r.stoch_rsi_d is not None else None,
             }
             for r in records
         ]

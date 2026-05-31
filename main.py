@@ -106,6 +106,13 @@ def _parse_args() -> argparse.Namespace:
         default="",
         help="Optional backtest run name (auto-generated if blank)",
     )
+    parser.add_argument(
+        "--list-strategies",
+        dest="list_strategies",
+        action="store_true",
+        default=False,
+        help="List all available backtest strategies and exit",
+    )
     return parser.parse_args()
 
 
@@ -312,6 +319,14 @@ def _run_replay(args: argparse.Namespace) -> None:
 
 def main() -> None:
     args = _parse_args()
+
+    # --list-strategies is a pure query — no DB connection needed
+    if args.list_strategies:
+        from strategies.registry import list_strategies, STRATEGIES
+        for name in list_strategies():
+            strat = STRATEGIES[name]
+            print(f"{name:<20} {strat.description}")
+        sys.exit(0)
 
     _db_preflight()
 

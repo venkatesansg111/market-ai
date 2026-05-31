@@ -7,6 +7,7 @@ from sqlalchemy import (
     BigInteger,
     Float,
     Index,
+    Integer,
     Numeric,
     String,
     Text,
@@ -108,6 +109,20 @@ class MarketIndicator(Base):
     vwap: Mapped[Optional[float]] = mapped_column(Numeric(18, 6), nullable=True)
     macd: Mapped[Optional[float]] = mapped_column(Numeric(18, 6), nullable=True)
     macd_signal: Mapped[Optional[float]] = mapped_column(Numeric(18, 6), nullable=True)
+    # ── Phase 4B advanced indicators ─────────────────────────────────────
+    atr_14: Mapped[Optional[float]] = mapped_column(Numeric(18, 6), nullable=True)
+    adx_14: Mapped[Optional[float]] = mapped_column(Numeric(8, 4), nullable=True)
+    plus_di: Mapped[Optional[float]] = mapped_column(Numeric(8, 4), nullable=True)
+    minus_di: Mapped[Optional[float]] = mapped_column(Numeric(8, 4), nullable=True)
+    bb_middle: Mapped[Optional[float]] = mapped_column(Numeric(18, 6), nullable=True)
+    bb_upper: Mapped[Optional[float]] = mapped_column(Numeric(18, 6), nullable=True)
+    bb_lower: Mapped[Optional[float]] = mapped_column(Numeric(18, 6), nullable=True)
+    bb_width: Mapped[Optional[float]] = mapped_column(Numeric(10, 8), nullable=True)
+    supertrend: Mapped[Optional[float]] = mapped_column(Numeric(18, 6), nullable=True)
+    supertrend_direction: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    obv: Mapped[Optional[float]] = mapped_column(Numeric(18, 2), nullable=True)
+    stoch_rsi_k: Mapped[Optional[float]] = mapped_column(Numeric(8, 4), nullable=True)
+    stoch_rsi_d: Mapped[Optional[float]] = mapped_column(Numeric(8, 4), nullable=True)
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
 
     __table_args__ = (
