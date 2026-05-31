@@ -10,7 +10,12 @@
       "Bash(venv/bin/python -m pytest tests/unit/ -v --tb=short)",
       "Bash(/Users/venkatesansg/market-ai/env/bin/python --version)",
       "Bash(env/bin/python *)",
-      "Bash(env/bin/pip install *)"
+      "Bash(env/bin/pip install *)",
+      "Bash(pytest tests/unit/test_position_sizer.py tests/unit/test_risk_controls.py tests/unit/test_portfolio_constructor.py tests/unit/test_risk_gate.py tests/unit/test_portfolio_state.py -v)",
+      "Bash(.venv/bin/pytest tests/unit/test_position_sizer.py tests/unit/test_risk_controls.py tests/unit/test_portfolio_constructor.py tests/unit/test_risk_gate.py tests/unit/test_portfolio_state.py -v)",
+      "Bash(/Users/venkatesansg/market-ai/.venv/bin/python -m pytest tests/unit/test_position_sizer.py tests/unit/test_risk_controls.py tests/unit/test_portfolio_constructor.py tests/unit/test_risk_gate.py tests/unit/test_portfolio_state.py -v)",
+      "Bash(env/bin/pytest tests/unit/test_position_sizer.py tests/unit/test_risk_controls.py tests/unit/test_portfolio_constructor.py tests/unit/test_risk_gate.py tests/unit/test_portfolio_state.py -v)",
+      "Bash(env/bin/pytest --ignore=tests/integration -q)"
     ]
   }
 }

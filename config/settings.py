@@ -101,3 +101,8 @@ class Settings:
     data_provider: str = field(
         default_factory=lambda: os.getenv("DATA_PROVIDER", "yfinance")
     )
+
+    # Root directory for generated reports
+    reports_dir: Path = field(
+        default_factory=lambda: Path(os.getenv("REPORTS_DIR", "reports"))
+    )

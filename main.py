@@ -29,6 +29,16 @@ Phase 5 — Quant Research Lab:
     python main.py --mode optimize --instruments "NIFTY 50" --timeframes 5min --strategy momentum
     python main.py --mode walkforward --instruments "NIFTY 50" --timeframes 5min --strategy ema --window-type rolling --train-months 12 --test-months 3
     python main.py --mode research --instruments "NIFTY 50" --timeframes 5min --from-date 2022-01-01 --to-date 2024-01-01
+
+Phase 6 — Meta Strategy Engine:
+    python main.py --mode meta-backtest --instruments "NIFTY 50" --timeframes 5min
+    python main.py --mode meta-backtest --instruments "NIFTY 50" --timeframes 5min --enable-adaptive-learning
+    python main.py --mode meta-backtest --instruments "NIFTY 50" --timeframes 5min --routing-mode weighted
+
+Phase 7 — Paper Trading:
+    python main.py --mode paper-trade --instruments "NIFTY 50" --timeframes 5min
+    python main.py --mode paper-trade --instruments "NIFTY 50" --timeframes 5min --capital 500000
+    python main.py --mode paper-trade --instruments "NIFTY 50" --timeframes 5min --routing-mode weighted --enable-adaptive-learning
 """
 
 import argparse
@@ -55,7 +65,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--mode",
         choices=["ingest", "indicators", "signals", "pipeline", "replay", "backtest",
-                 "optimize", "walkforward", "research"],
+                 "optimize", "walkforward", "research", "meta-backtest", "paper-trade"],
         default="ingest",
         help=(
             "Operating mode: "
@@ -67,7 +77,9 @@ def _parse_args() -> argparse.Namespace:
             "backtest (Phase 3 strategy backtesting), "
             "optimize (Phase 5 parameter optimization), "
             "walkforward (Phase 5 walk-forward optimization), "
-            "research (Phase 5 full research pipeline)"
+            "research (Phase 5 full research pipeline), "
+            "meta-backtest (Phase 6 meta strategy backtest), "
+            "paper-trade (Phase 7 paper trading bridge)"
         ),
     )
     parser.add_argument(
@@ -128,6 +140,21 @@ def _parse_args() -> argparse.Namespace:
         action="store_true",
         default=False,
         help="List all available backtest strategies and exit",
+    )
+    # Phase 6 — meta strategy arguments
+    parser.add_argument(
+        "--enable-adaptive-learning",
+        dest="enable_adaptive_learning",
+        action="store_true",
+        default=False,
+        help="Enable adaptive learning loop in meta-backtest mode",
+    )
+    parser.add_argument(
+        "--routing-mode",
+        dest="routing_mode",
+        choices=["single", "weighted"],
+        default="single",
+        help="Meta strategy routing mode: single (default) or weighted blend",
     )
     # Phase 5 — research / optimization arguments
     parser.add_argument(
@@ -438,6 +465,102 @@ def _run_walkforward(args: argparse.Namespace) -> None:
                     r.test_start.date(), r.test_end.date(), r.cagr, r.sharpe)
 
 
+def _run_meta_backtest(args: argparse.Namespace) -> None:
+    from decimal import Decimal
+    from meta.meta_models import RoutingMode
+    from meta.meta_strategy_engine import MetaStrategyEngine
+    from backtesting.backtest_engine import BacktestEngine
+    from backtesting.backtest_models import BacktestConfig
+    from backtesting.reporting import BacktestReporter
+
+    instruments = [i.strip() for i in args.instruments.split(",")]
+    timeframes = [tf.strip() for tf in args.timeframes.split(",")]
+    if len(instruments) != 1 or len(timeframes) != 1:
+        logger.error("meta-backtest mode requires exactly one instrument and one timeframe.")
+        sys.exit(1)
+
+    instrument = instruments[0]
+    timeframe = timeframes[0]
+    start_date, end_date = _resolve_date_range(args)
+
+    routing_mode = (
+        RoutingMode.WEIGHTED_BLEND if args.routing_mode == "weighted"
+        else RoutingMode.SINGLE_BEST
+    )
+
+    logger.info("=" * 55)
+    logger.info("  Market AI — Meta Strategy Backtest (Phase 6)")
+    logger.info("=" * 55)
+    logger.info("Instrument  : %s | Timeframe: %s", instrument, timeframe)
+    logger.info("Routing     : %s", routing_mode.value)
+    logger.info("Adaptive    : %s", args.enable_adaptive_learning)
+
+    meta_engine = MetaStrategyEngine(
+        routing_mode=routing_mode,
+        enable_adaptive_learning=args.enable_adaptive_learning,
+    )
+
+    # Determine strategy by loading recent indicator data to detect regime
+    from database.connection import get_session
+    from database.models import MarketIndicator
+    from sqlalchemy import select
+
+    try:
+        with get_session() as session:
+            rows = session.execute(
+                select(MarketIndicator)
+                .where(
+                    MarketIndicator.instrument == instrument,
+                    MarketIndicator.timeframe == timeframe,
+                    MarketIndicator.candle_time >= start_date,
+                    MarketIndicator.candle_time <= end_date,
+                    MarketIndicator.adx_14.isnot(None),
+                )
+                .order_by(MarketIndicator.candle_time.asc())
+            ).scalars().all()
+        rows = list(rows)
+    except Exception as exc:
+        logger.error("Failed to load indicators: %s", exc)
+        sys.exit(1)
+
+    if not rows:
+        logger.error("No indicator data found for %s %s in range.", instrument, timeframe)
+        sys.exit(1)
+
+    signal = meta_engine.analyze(
+        row=rows[-1],
+        instrument=instrument,
+        timeframe=timeframe,
+        mean_atr=sum(float(r.atr_14) for r in rows if r.atr_14) / max(len(rows), 1),
+    )
+
+    logger.info("Regime: %s (confidence=%.2f)", signal.regime_type.value, signal.confidence)
+    logger.info("Selected strategy: %s", signal.selected_strategy)
+    logger.info("Reasoning: %s", signal.reasoning)
+
+    config = BacktestConfig(
+        instrument=instrument,
+        timeframe=timeframe,
+        start_date=start_date,
+        end_date=end_date,
+        starting_capital=Decimal(str(args.capital)),
+        strategy_name=signal.selected_strategy,
+        run_name=f"meta_{signal.regime_type.value}",
+    )
+
+    engine = BacktestEngine()
+    result = engine.run(config)
+
+    if args.enable_adaptive_learning:
+        meta_engine.ingest_backtest_result(result, meta_signal=signal)
+        logger.info("Adaptive learning updated with backtest result.")
+
+    reporter = BacktestReporter(result)
+    paths = reporter.save()
+    logger.info("─" * 55)
+    logger.info("Meta-backtest complete. Reports: %s", {k: str(v) for k, v in paths.items()})
+
+
 def _run_research(args: argparse.Namespace) -> None:
     from decimal import Decimal
     from optimization.research_engine import ResearchEngineService
@@ -474,6 +597,126 @@ def _run_research(args: argparse.Namespace) -> None:
         logger.info("  Best strategy: %s (score=%.4f)",
                     report.summary["best_strategy"],
                     report.summary.get("best_composite_score", 0))
+
+
+def _run_paper_trade(args: argparse.Namespace) -> None:
+    from decimal import Decimal
+    from meta.meta_models import RoutingMode
+    from meta.meta_strategy_engine import MetaStrategyEngine
+    from execution.execution_engine import ExecutionEngine, meta_signal_to_request
+    from execution.paper_broker import PaperBrokerAdapter
+    from execution.order_manager import OrderManager
+    from execution.position_manager import PositionManager
+    from execution.execution_models import OrderSide, OrderType
+
+    instruments = [i.strip() for i in args.instruments.split(",")]
+    timeframes = [tf.strip() for tf in args.timeframes.split(",")]
+    if len(instruments) != 1 or len(timeframes) != 1:
+        logger.error("paper-trade mode requires exactly one instrument and one timeframe.")
+        sys.exit(1)
+
+    instrument = instruments[0]
+    timeframe = timeframes[0]
+    start_date, end_date = _resolve_date_range(args)
+
+    routing_mode = (
+        RoutingMode.WEIGHTED_BLEND if args.routing_mode == "weighted"
+        else RoutingMode.SINGLE_BEST
+    )
+
+    logger.info("=" * 55)
+    logger.info("  Market AI — Paper Trading Bridge (Phase 7)")
+    logger.info("=" * 55)
+    logger.info("Instrument  : %s | Timeframe: %s", instrument, timeframe)
+    logger.info("Capital     : %.0f", args.capital)
+    logger.info("Routing     : %s", routing_mode.value)
+
+    # Load recent indicator data for regime detection
+    from database.connection import get_session
+    from database.models import MarketIndicator
+    from sqlalchemy import select
+
+    try:
+        with get_session() as session:
+            rows = session.execute(
+                select(MarketIndicator)
+                .where(
+                    MarketIndicator.instrument == instrument,
+                    MarketIndicator.timeframe == timeframe,
+                    MarketIndicator.candle_time >= start_date,
+                    MarketIndicator.candle_time <= end_date,
+                    MarketIndicator.adx_14.isnot(None),
+                )
+                .order_by(MarketIndicator.candle_time.asc())
+            ).scalars().all()
+        rows = list(rows)
+    except Exception as exc:
+        logger.error("Failed to load indicators: %s", exc)
+        sys.exit(1)
+
+    if not rows:
+        logger.error("No indicator data found for %s %s in range.", instrument, timeframe)
+        sys.exit(1)
+
+    meta_engine = MetaStrategyEngine(
+        routing_mode=routing_mode,
+        enable_adaptive_learning=args.enable_adaptive_learning,
+    )
+    signal = meta_engine.analyze(
+        row=rows[-1],
+        instrument=instrument,
+        timeframe=timeframe,
+        mean_atr=sum(float(r.atr_14) for r in rows if r.atr_14) / max(len(rows), 1),
+    )
+
+    logger.info("Regime: %s (confidence=%.2f)", signal.regime_type.value, signal.confidence)
+    logger.info("Selected strategy: %s", signal.selected_strategy)
+
+    # Estimate a reference price from last close
+    from database.models import MarketCandle
+    try:
+        with get_session() as session:
+            candle = session.execute(
+                select(MarketCandle)
+                .where(
+                    MarketCandle.instrument == instrument,
+                    MarketCandle.timeframe == timeframe,
+                )
+                .order_by(MarketCandle.candle_time.desc())
+                .limit(1)
+            ).scalar_one_or_none()
+        ref_price = Decimal(str(candle.close)) if candle else Decimal("0")
+    except Exception:
+        ref_price = Decimal("0")
+
+    if ref_price <= Decimal("0"):
+        logger.warning("No reference price available — skipping execution.")
+        return
+
+    paper_broker = PaperBrokerAdapter(
+        current_price_map={instrument: ref_price},
+        initial_cash=Decimal(str(args.capital)),
+    )
+    engine = ExecutionEngine(
+        broker=paper_broker,
+        order_manager=OrderManager(),
+        position_manager=PositionManager(),
+    )
+
+    qty = max(1, int(Decimal(str(args.capital)) / ref_price / 10))
+    result = engine.execute_from_signal(signal, quantity=qty, current_price=ref_price)
+
+    logger.info("─" * 55)
+    logger.info("Execution result: order_id=%s status=%s", result.order_id, result.status.value)
+    if result.fills:
+        for f in result.fills:
+            logger.info("  Fill: qty=%d @ %s", f.quantity, f.price)
+    pos = engine.position_manager.get_position(instrument)
+    if pos:
+        logger.info("Position: %s qty=%d avg=%.2f realized_pnl=%.2f",
+                    pos.symbol, pos.quantity, float(pos.average_price), float(pos.realized_pnl))
+    acct = paper_broker.get_account_info()
+    logger.info("Account cash: %.2f  portfolio: %.2f", float(acct.cash_balance), float(acct.portfolio_value))
 
 
 def _run_replay(args: argparse.Namespace) -> None:
@@ -534,6 +777,8 @@ def main() -> None:
         "optimize": _run_optimize,
         "walkforward": _run_walkforward,
         "research": _run_research,
+        "meta-backtest": _run_meta_backtest,
+        "paper-trade": _run_paper_trade,
     }
     dispatch[args.mode](args)
 
