@@ -3,32 +3,65 @@ services:
     image: postgres:17
     container_name: market-postgres
     restart: unless-stopped
-
     environment:
       POSTGRES_DB: market_ai
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-
     ports:
       - "5432:5432"
-
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   pgadmin:
     image: dpage/pgadmin4
     container_name: market-pgadmin
     restart: unless-stopped
-
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
       PGADMIN_DEFAULT_PASSWORD: admin123
-
     ports:
       - "8080:80"
-
     depends_on:
       - postgres
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: trading-backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      Jwt__Key: trading-terminal-super-secret-key-32chars!!
+      Jwt__Issuer: TradingTerminal
+      Jwt__Audience: TradingTerminalUsers
+    depends_on:
+      - postgres
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./ui/trading-terminal-react
+      dockerfile: Dockerfile
+    container_name: trading-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    environment:
+      VITE_API_BASE: http://backend:5000
 
 volumes:
   postgres_data:

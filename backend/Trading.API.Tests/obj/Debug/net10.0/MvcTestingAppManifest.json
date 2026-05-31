@@ -1,0 +1,7 @@
+{
+  "Trading.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/Users\/venkatesansg\/market-ai\/backend\/Trading.API",
+  "Trading.Application, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/Users\/venkatesansg\/market-ai\/backend\/Trading.Application",
+  "Trading.Contracts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/Users\/venkatesansg\/market-ai\/backend\/Trading.Contracts",
+  "Trading.Domain, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/Users\/venkatesansg\/market-ai\/backend\/Trading.Domain",
+  "Trading.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/Users\/venkatesansg\/market-ai\/backend\/Trading.Infrastructure"
+}

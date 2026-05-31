@@ -26,7 +26,25 @@
       "Bash(env/bin/pytest tests/unit/test_backpressure.py::TestBackpressureAwareEventBus::test_circuit_breaker_opens_on_repeated_failures -v --tb=long)",
       "Bash(env/bin/pytest tests/ -q --tb=no)",
       "Bash(env/bin/pytest tests/unit/test_decision_journal.py tests/unit/test_audit_trail.py tests/unit/test_explainability.py tests/unit/test_pnl_attribution.py tests/unit/test_metrics_engine.py tests/unit/test_alert_engine.py tests/unit/test_correlation_engine.py tests/unit/test_research_analytics.py tests/unit/test_system_health.py -q --tb=short)",
-      "Bash(env/bin/pytest tests/unit/test_decision_journal.py tests/unit/test_audit_trail.py tests/unit/test_explainability.py tests/unit/test_pnl_attribution.py tests/unit/test_metrics_engine.py tests/unit/test_alert_engine.py tests/unit/test_correlation_engine.py tests/unit/test_research_analytics.py tests/unit/test_system_health.py -q --tb=no)"
+      "Bash(env/bin/pytest tests/unit/test_decision_journal.py tests/unit/test_audit_trail.py tests/unit/test_explainability.py tests/unit/test_pnl_attribution.py tests/unit/test_metrics_engine.py tests/unit/test_alert_engine.py tests/unit/test_correlation_engine.py tests/unit/test_research_analytics.py tests/unit/test_system_health.py -q --tb=no)",
+      "Bash(dotnet --version)",
+      "Bash(npm --version)",
+      "Bash(/usr/local/share/dotnet/dotnet --version)",
+      "Bash(mkdir -p /Users/venkatesansg/market-ai/backend)",
+      "Bash(/usr/local/share/dotnet/dotnet new *)",
+      "Bash(/usr/local/share/dotnet/dotnet sln *)",
+      "Bash(/usr/local/share/dotnet/dotnet add *)",
+      "Bash(/usr/local/share/dotnet/dotnet build *)",
+      "Bash(/usr/local/share/dotnet/dotnet remove *)",
+      "Bash(/usr/local/share/dotnet/dotnet restore *)",
+      "Bash(/usr/local/share/dotnet/dotnet test *)",
+      "Bash(mkdir -p /Users/venkatesansg/market-ai/ui)",
+      "Bash(npm create *)",
+      "Bash(npm install *)",
+      "Bash(npx tsc *)",
+      "Bash(npm run *)",
+      "Bash(npx vitest *)",
+      "Bash(.venv/bin/pytest tests/ -q --tb=no)"
     ]
   }
 }

@@ -1,0 +1,33 @@
+{
+  "version": 2,
+  "dgSpecHash": "E6K8bEu5Guo=",
+  "success": true,
+  "projectFilePath": "/Users/venkatesansg/market-ai/backend/Trading.API/Trading.API.csproj",
+  "expectedPackageFiles": [
+    "/Users/venkatesansg/.nuget/packages/microsoft.aspnetcore.authentication.jwtbearer/10.0.0/microsoft.aspnetcore.authentication.jwtbearer.10.0.0.nupkg.sha512",
+    "/Users/venkatesansg/.nuget/packages/microsoft.aspnetcore.openapi/10.0.0/microsoft.aspnetcore.openapi.10.0.0.nupkg.sha512",
+    "/Users/venkatesansg/.nuget/packages/microsoft.identitymodel.abstractions/8.12.1/microsoft.identitymodel.abstractions.8.12.1.nupkg.sha512",
+    "/Users/venkatesansg/.nuget/packages/microsoft.identitymodel.jsonwebtokens/8.12.1/microsoft.identitymodel.jsonwebtokens.8.12.1.nupkg.sha512",
+    "/Users/venkatesansg/.nuget/packages/microsoft.identitymodel.logging/8.12.1/microsoft.identitymodel.logging.8.12.1.nupkg.sha512",
+    "/Users/venkatesansg/.nuget/packages/microsoft.identitymodel.protocols/8.0.1/microsoft.identitymodel.protocols.8.0.1.nupkg.sha512",
+    "/Users/venkatesansg/.nuget/packages/microsoft.identitymodel.protocols.openidconnect/8.0.1/microsoft.identitymodel.protocols.openidconnect.8.0.1.nupkg.sha512",
+    "/Users/venkatesansg/.nuget/packages/microsoft.identitymodel.tokens/8.12.1/microsoft.identitymodel.tokens.8.12.1.nupkg.sha512",
+    "/Users/venkatesansg/.nuget/packages/microsoft.openapi/2.0.0/microsoft.openapi.2.0.0.nupkg.sha512",
+    "/Users/venkatesansg/.nuget/packages/scalar.aspnetcore/2.5.5/scalar.aspnetcore.2.5.5.nupkg.sha512",
+    "/Users/venkatesansg/.nuget/packages/system.identitymodel.tokens.jwt/8.12.1/system.identitymodel.tokens.jwt.8.12.1.nupkg.sha512"
+  ],
+  "logs": [
+    {
+      "code": "NU1603",
+      "level": "Warning",
+      "message": "Trading.API depends on Scalar.AspNetCore (>= 2.5.4) but Scalar.AspNetCore 2.5.4 was not found. Scalar.AspNetCore 2.5.5 was resolved instead.",
+      "projectPath": "/Users/venkatesansg/market-ai/backend/Trading.API/Trading.API.csproj",
+      "warningLevel": 1,
+      "filePath": "/Users/venkatesansg/market-ai/backend/Trading.API/Trading.API.csproj",
+      "libraryId": "Scalar.AspNetCore",
+      "targetGraphs": [
+        "net10.0"
+      ]
+    }
+  ]
+}

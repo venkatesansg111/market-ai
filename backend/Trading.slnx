@@ -1,0 +1,9 @@
+<Solution>
+  <Project Path="Trading.API.Tests/Trading.API.Tests.csproj" />
+  <Project Path="Trading.API/Trading.API.csproj" />
+  <Project Path="Trading.Application.Tests/Trading.Application.Tests.csproj" />
+  <Project Path="Trading.Application/Trading.Application.csproj" />
+  <Project Path="Trading.Contracts/Trading.Contracts.csproj" />
+  <Project Path="Trading.Domain/Trading.Domain.csproj" />
+  <Project Path="Trading.Infrastructure/Trading.Infrastructure.csproj" />
+</Solution>
