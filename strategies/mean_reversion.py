@@ -13,12 +13,20 @@ _NO_TRADE_CONFIDENCE = 50
 class MeanReversionStrategy(Strategy):
     """RSI mean-reversion strategy: fades extreme readings.
 
-    BUY:      RSI < 30 — oversold, price expected to bounce toward mean
-    SELL:     RSI > 70 — overbought, price expected to revert toward mean
-    NO_TRADE: RSI in [30, 70], or RSI data unavailable
+    BUY:      RSI < rsi_oversold  — oversold, bounce expected
+    SELL:     RSI > rsi_overbought — overbought, reversion expected
+    NO_TRADE: RSI in [rsi_oversold, rsi_overbought] or data unavailable
 
-    Boundary values (RSI == 30 or RSI == 70) are NOT signals — strict inequalities.
+    Boundary values are NOT signals — strict inequalities.
     """
+
+    def __init__(
+        self,
+        rsi_oversold: float = 30.0,
+        rsi_overbought: float = 70.0,
+    ) -> None:
+        self._rsi_oversold = rsi_oversold
+        self._rsi_overbought = rsi_overbought
 
     @property
     def strategy_name(self) -> str:
@@ -48,21 +56,21 @@ class MeanReversionStrategy(Strategy):
 
         rsi_val = float(indicators.rsi14)
 
-        if rsi_val < 30:
+        if rsi_val < self._rsi_oversold:
             return self._make(
                 candle, SignalType.BUY, _BUY_CONFIDENCE,
-                f"RSI({rsi_val:.1f}) < 30 — oversold, mean reversion buy",
+                f"RSI({rsi_val:.1f}) < {self._rsi_oversold} — oversold, mean reversion buy",
             )
 
-        if rsi_val > 70:
+        if rsi_val > self._rsi_overbought:
             return self._make(
                 candle, SignalType.SELL, _SELL_CONFIDENCE,
-                f"RSI({rsi_val:.1f}) > 70 — overbought, mean reversion sell",
+                f"RSI({rsi_val:.1f}) > {self._rsi_overbought} — overbought, mean reversion sell",
             )
 
         return self._make(
             candle, SignalType.NO_TRADE, _NO_TRADE_CONFIDENCE,
-            f"RSI({rsi_val:.1f}) in [30, 70] — no reversion signal",
+            f"RSI({rsi_val:.1f}) in [{self._rsi_oversold}, {self._rsi_overbought}] — no reversion signal",
         )
 
     def _make(

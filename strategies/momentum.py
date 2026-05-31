@@ -13,13 +13,18 @@ _NO_TRADE_CONFIDENCE = 50
 class MomentumStrategy(Strategy):
     """Dual-momentum strategy: RSI and MACD crossover must agree.
 
-    BUY:      RSI > 60  AND  MACD > Signal — strong bullish momentum confirmed
-    SELL:     RSI < 40  AND  MACD < Signal — strong bearish momentum confirmed
-    NO_TRADE: conflicting signals (RSI bullish + MACD bearish, or vice versa),
-              or any required indicator is missing
-
-    Requiring both indicators to agree reduces false signals in choppy markets.
+    BUY:      RSI > rsi_buy_threshold  AND  MACD > Signal
+    SELL:     RSI < rsi_sell_threshold AND  MACD < Signal
+    NO_TRADE: conflicting signals or any required indicator missing
     """
+
+    def __init__(
+        self,
+        rsi_buy_threshold: float = 60.0,
+        rsi_sell_threshold: float = 40.0,
+    ) -> None:
+        self._rsi_buy = rsi_buy_threshold
+        self._rsi_sell = rsi_sell_threshold
 
     @property
     def strategy_name(self) -> str:
@@ -56,23 +61,23 @@ class MomentumStrategy(Strategy):
 
         rsi_val = float(rsi)
 
-        if rsi_val > 60 and macd > macd_signal:
+        if rsi_val > self._rsi_buy and macd > macd_signal:
             return self._make(
                 candle, SignalType.BUY, _BUY_CONFIDENCE,
-                f"RSI({rsi_val:.1f}) > 60 AND MACD({float(macd):.4f})"
+                f"RSI({rsi_val:.1f}) > {self._rsi_buy} AND MACD({float(macd):.4f})"
                 f" > Signal({float(macd_signal):.4f}) — bullish momentum",
             )
 
-        if rsi_val < 40 and macd < macd_signal:
+        if rsi_val < self._rsi_sell and macd < macd_signal:
             return self._make(
                 candle, SignalType.SELL, _SELL_CONFIDENCE,
-                f"RSI({rsi_val:.1f}) < 40 AND MACD({float(macd):.4f})"
+                f"RSI({rsi_val:.1f}) < {self._rsi_sell} AND MACD({float(macd):.4f})"
                 f" < Signal({float(macd_signal):.4f}) — bearish momentum",
             )
 
         return self._make(
             candle, SignalType.NO_TRADE, _NO_TRADE_CONFIDENCE,
-            f"RSI({rsi_val:.1f}) and MACD not aligned for momentum signal — no trade",
+            f"RSI({rsi_val:.1f}) and MACD not aligned — no trade",
         )
 
     def _make(

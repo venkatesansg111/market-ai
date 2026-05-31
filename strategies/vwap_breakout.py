@@ -13,12 +13,18 @@ _NO_TRADE_CONFIDENCE = 50
 class VWAPBreakoutStrategy(Strategy):
     """VWAP breakout strategy with RSI confirmation.
 
-    BUY:      Close > VWAP  AND  RSI > 55 — price breaking above VWAP with momentum
-    SELL:     Close < VWAP  AND  RSI < 45 — price breaking below VWAP with momentum
-    NO_TRADE: conflicting signals, neutral RSI, or missing VWAP/RSI data
-
-    Both conditions must be met simultaneously — VWAP alone or RSI alone is not enough.
+    BUY:      Close > VWAP  AND  RSI > rsi_buy_threshold
+    SELL:     Close < VWAP  AND  RSI < rsi_sell_threshold
+    NO_TRADE: conflicting signals or missing data
     """
+
+    def __init__(
+        self,
+        rsi_buy_threshold: float = 55.0,
+        rsi_sell_threshold: float = 45.0,
+    ) -> None:
+        self._rsi_buy = rsi_buy_threshold
+        self._rsi_sell = rsi_sell_threshold
 
     @property
     def strategy_name(self) -> str:
@@ -52,18 +58,18 @@ class VWAPBreakoutStrategy(Strategy):
         rsi_val = float(rsi)
         close = candle.close
 
-        if close > vwap and rsi_val > 55:
+        if close > vwap and rsi_val > self._rsi_buy:
             return self._make(
                 candle, SignalType.BUY, _BUY_CONFIDENCE,
                 f"Close({float(close):.2f}) > VWAP({float(vwap):.2f})"
-                f" AND RSI({rsi_val:.1f}) > 55 — breakout confirmed",
+                f" AND RSI({rsi_val:.1f}) > {self._rsi_buy} — breakout confirmed",
             )
 
-        if close < vwap and rsi_val < 45:
+        if close < vwap and rsi_val < self._rsi_sell:
             return self._make(
                 candle, SignalType.SELL, _SELL_CONFIDENCE,
                 f"Close({float(close):.2f}) < VWAP({float(vwap):.2f})"
-                f" AND RSI({rsi_val:.1f}) < 45 — breakdown confirmed",
+                f" AND RSI({rsi_val:.1f}) < {self._rsi_sell} — breakdown confirmed",
             )
 
         return self._make(

@@ -24,10 +24,16 @@ Phase 4C — Multi-Timeframe Backtesting:
     python main.py --mode backtest --strategy supertrend_confluence --instruments "NIFTY 50" --timeframes 5min
     python main.py --mode backtest --strategy momentum_confluence --trend-timeframe 15min --setup-timeframe 5min --entry-timeframe 1min
     python main.py --list-strategies
+
+Phase 5 — Quant Research Lab:
+    python main.py --mode optimize --instruments "NIFTY 50" --timeframes 5min --strategy momentum
+    python main.py --mode walkforward --instruments "NIFTY 50" --timeframes 5min --strategy ema --window-type rolling --train-months 12 --test-months 3
+    python main.py --mode research --instruments "NIFTY 50" --timeframes 5min --from-date 2022-01-01 --to-date 2024-01-01
 """
 
 import argparse
 import sys
+from datetime import datetime
 
 from config import settings
 from data_providers.base import Timeframe
@@ -48,7 +54,8 @@ def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Market AI — data and intelligence platform")
     parser.add_argument(
         "--mode",
-        choices=["ingest", "indicators", "signals", "pipeline", "replay", "backtest"],
+        choices=["ingest", "indicators", "signals", "pipeline", "replay", "backtest",
+                 "optimize", "walkforward", "research"],
         default="ingest",
         help=(
             "Operating mode: "
@@ -57,7 +64,10 @@ def _parse_args() -> argparse.Namespace:
             "signals (generate trade signals), "
             "pipeline (indicators + signals), "
             "replay (historical candle replay through candle builder), "
-            "backtest (Phase 3 strategy backtesting)"
+            "backtest (Phase 3 strategy backtesting), "
+            "optimize (Phase 5 parameter optimization), "
+            "walkforward (Phase 5 walk-forward optimization), "
+            "research (Phase 5 full research pipeline)"
         ),
     )
     parser.add_argument(
@@ -118,6 +128,28 @@ def _parse_args() -> argparse.Namespace:
         action="store_true",
         default=False,
         help="List all available backtest strategies and exit",
+    )
+    # Phase 5 — research / optimization arguments
+    parser.add_argument(
+        "--window-type",
+        dest="window_type",
+        choices=["rolling", "expanding"],
+        default="rolling",
+        help="Walk-forward window type (default: rolling)",
+    )
+    parser.add_argument(
+        "--train-months",
+        dest="train_months",
+        type=int,
+        default=12,
+        help="Walk-forward training window length in months (default: 12)",
+    )
+    parser.add_argument(
+        "--test-months",
+        dest="test_months",
+        type=int,
+        default=3,
+        help="Walk-forward test window length in months (default: 3)",
     )
     # Phase 4C — multi-timeframe timeframe overrides
     parser.add_argument(
@@ -249,7 +281,7 @@ def _run_pipeline(args: argparse.Namespace) -> None:
 
 
 def _run_backtest(args: argparse.Namespace) -> None:
-    from datetime import datetime, timezone
+    from datetime import timezone
     from decimal import Decimal
     from backtesting.backtest_engine import BacktestEngine
     from backtesting.backtest_models import BacktestConfig
@@ -310,6 +342,140 @@ def _run_backtest(args: argparse.Namespace) -> None:
     logger.info("Reports saved: %s", {k: str(v) for k, v in paths.items()})
 
 
+def _resolve_date_range(args: argparse.Namespace):
+    """Return (start_date, end_date) as datetime objects."""
+    from datetime import timezone
+    today = datetime.now(tz=timezone.utc).replace(tzinfo=None)
+    if args.from_date:
+        try:
+            start_date = datetime.strptime(args.from_date, "%Y-%m-%d")
+        except ValueError:
+            logger.error("--from-date must be YYYY-MM-DD, got: %s", args.from_date)
+            sys.exit(1)
+    else:
+        from utils.time_utils import history_start_date
+        start_date = history_start_date(months=12)
+    if args.to_date:
+        try:
+            end_date = datetime.strptime(args.to_date, "%Y-%m-%d")
+        except ValueError:
+            logger.error("--to-date must be YYYY-MM-DD, got: %s", args.to_date)
+            sys.exit(1)
+    else:
+        end_date = today
+    return start_date, end_date
+
+
+def _run_optimize(args: argparse.Namespace) -> None:
+    from decimal import Decimal
+    from optimization.research_engine import ResearchEngineService
+
+    instruments = [i.strip() for i in args.instruments.split(",")]
+    timeframes = [tf.strip() for tf in args.timeframes.split(",")]
+    if len(instruments) != 1 or len(timeframes) != 1:
+        logger.error("optimize mode requires exactly one instrument and one timeframe.")
+        sys.exit(1)
+
+    start_date, end_date = _resolve_date_range(args)
+
+    logger.info("=" * 55)
+    logger.info("  Market AI — Parameter Optimization")
+    logger.info("=" * 55)
+    logger.info("Strategy    : %s", args.strategy)
+    logger.info("Instrument  : %s | Timeframe: %s", instruments[0], timeframes[0])
+
+    engine = ResearchEngineService()
+    results = engine.run_optimization(
+        strategy_name=args.strategy,
+        instrument=instruments[0],
+        timeframe=timeframes[0],
+        start_date=start_date,
+        end_date=end_date,
+        starting_capital=Decimal(str(args.capital)),
+    )
+    rankings = engine.rank_results(results)
+    logger.info("─" * 55)
+    logger.info("  Completed %d optimization runs", len(results))
+    for rs in rankings[:5]:
+        logger.info("  #%d %s score=%.4f cagr=%.1f sharpe=%.2f",
+                    rs.rank, rs.strategy_name, rs.composite_score, rs.cagr, rs.sharpe)
+
+
+def _run_walkforward(args: argparse.Namespace) -> None:
+    from decimal import Decimal
+    from optimization.research_engine import ResearchEngineService
+
+    instruments = [i.strip() for i in args.instruments.split(",")]
+    timeframes = [tf.strip() for tf in args.timeframes.split(",")]
+    if len(instruments) != 1 or len(timeframes) != 1:
+        logger.error("walkforward mode requires exactly one instrument and one timeframe.")
+        sys.exit(1)
+
+    start_date, end_date = _resolve_date_range(args)
+
+    logger.info("=" * 55)
+    logger.info("  Market AI — Walk-Forward Optimization")
+    logger.info("=" * 55)
+    logger.info("Strategy    : %s | Window: %s", args.strategy, args.window_type)
+    logger.info("Train/Test  : %d/%d months", args.train_months, args.test_months)
+
+    engine = ResearchEngineService()
+    results = engine.run_walk_forward(
+        strategy_name=args.strategy,
+        instrument=instruments[0],
+        timeframe=timeframes[0],
+        start_date=start_date,
+        end_date=end_date,
+        window_type=args.window_type,
+        train_months=args.train_months,
+        test_months=args.test_months,
+        starting_capital=Decimal(str(args.capital)),
+    )
+    logger.info("─" * 55)
+    logger.info("  Walk-forward complete: %d windows", len(results))
+    for r in results:
+        logger.info("  %s → %s  cagr=%.1f sharpe=%.2f",
+                    r.test_start.date(), r.test_end.date(), r.cagr, r.sharpe)
+
+
+def _run_research(args: argparse.Namespace) -> None:
+    from decimal import Decimal
+    from optimization.research_engine import ResearchEngineService
+
+    instruments = [i.strip() for i in args.instruments.split(",")]
+    timeframes = [tf.strip() for tf in args.timeframes.split(",")]
+    if len(instruments) != 1 or len(timeframes) != 1:
+        logger.error("research mode requires exactly one instrument and one timeframe.")
+        sys.exit(1)
+
+    start_date, end_date = _resolve_date_range(args)
+
+    logger.info("=" * 55)
+    logger.info("  Market AI — Full Research Pipeline")
+    logger.info("=" * 55)
+
+    engine = ResearchEngineService()
+    report = engine.run_full_research(
+        instrument=instruments[0],
+        timeframe=timeframes[0],
+        start_date=start_date,
+        end_date=end_date,
+        starting_capital=Decimal(str(args.capital)),
+        train_months=args.train_months,
+        test_months=args.test_months,
+        window_type=args.window_type,
+    )
+    paths = engine.save_report(report)
+    logger.info("─" * 55)
+    logger.info("  Research complete. Reports saved:")
+    for fmt, path in paths.items():
+        logger.info("    %s: %s", fmt, path)
+    if report.summary.get("best_strategy"):
+        logger.info("  Best strategy: %s (score=%.4f)",
+                    report.summary["best_strategy"],
+                    report.summary.get("best_composite_score", 0))
+
+
 def _run_replay(args: argparse.Namespace) -> None:
     from realtime.candle_manager import CandleManager
     from realtime.candle_persistence import CandlePersistenceService
@@ -365,6 +531,9 @@ def main() -> None:
         "pipeline": _run_pipeline,
         "replay": _run_replay,
         "backtest": _run_backtest,
+        "optimize": _run_optimize,
+        "walkforward": _run_walkforward,
+        "research": _run_research,
     }
     dispatch[args.mode](args)
 

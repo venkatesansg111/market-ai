@@ -16,9 +16,15 @@ class EmaCrossoverStrategy(Strategy):
     BUY  (STRONG_BUY):  EMA20 > EMA50 > EMA200 — full bullish stack
     SELL (STRONG_SELL): EMA20 < EMA50 < EMA200 — full bearish stack
     NO_TRADE: partial alignment, all EMAs equal, or any EMA missing
-
-    Requires EMA200 warmup (~200 bars). Returns NO_TRADE during warmup.
     """
+
+    def __init__(
+        self,
+        confidence_buy: int = _STRONG_BUY_CONFIDENCE,
+        confidence_sell: int = _STRONG_SELL_CONFIDENCE,
+    ) -> None:
+        self._conf_buy = confidence_buy
+        self._conf_sell = confidence_sell
 
     @property
     def strategy_name(self) -> str:
@@ -54,14 +60,14 @@ class EmaCrossoverStrategy(Strategy):
 
         if ema20 > ema50 > ema200:
             return self._make(
-                candle, SignalType.STRONG_BUY, _STRONG_BUY_CONFIDENCE,
+                candle, SignalType.STRONG_BUY, self._conf_buy,
                 f"EMA20({float(ema20):.2f}) > EMA50({float(ema50):.2f})"
                 f" > EMA200({float(ema200):.2f}) — full bullish alignment",
             )
 
         if ema20 < ema50 < ema200:
             return self._make(
-                candle, SignalType.STRONG_SELL, _STRONG_SELL_CONFIDENCE,
+                candle, SignalType.STRONG_SELL, self._conf_sell,
                 f"EMA20({float(ema20):.2f}) < EMA50({float(ema50):.2f})"
                 f" < EMA200({float(ema200):.2f}) — full bearish alignment",
             )

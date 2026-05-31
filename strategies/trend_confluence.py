@@ -39,10 +39,12 @@ class TrendConfluenceStrategy(MultiTimeframeStrategy):
         trend_tf: str = "1day",
         setup_tf: str = "15min",
         entry_tf: str = "5min",
+        adx_threshold: float = _ADX_THRESHOLD,
     ) -> None:
         self._trend_tf = trend_tf
         self._setup_tf = setup_tf
         self._entry_tf = entry_tf
+        self._adx_threshold = adx_threshold
 
     # ------------------------------------------------------------------
     # Strategy ABC properties
@@ -131,11 +133,11 @@ class TrendConfluenceStrategy(MultiTimeframeStrategy):
         adx_confirms = False
         if setup_rec is not None and setup_rec.adx_14 is not None:
             adx = float(setup_rec.adx_14)
-            if adx > _ADX_THRESHOLD:
+            if adx > self._adx_threshold:
                 adx_confirms = True
-                reasons.append(f"[{self._setup_tf}] ADX={adx:.1f} > {_ADX_THRESHOLD}")
+                reasons.append(f"[{self._setup_tf}] ADX={adx:.1f} > {self._adx_threshold}")
             else:
-                reasons.append(f"[{self._setup_tf}] ADX={adx:.1f} ≤ {_ADX_THRESHOLD} (weak)")
+                reasons.append(f"[{self._setup_tf}] ADX={adx:.1f} ≤ {self._adx_threshold} (weak)")
         else:
             reasons.append(f"[{self._setup_tf}] ADX data unavailable")
 

@@ -47,10 +47,14 @@ class MomentumConfluenceStrategy(MultiTimeframeStrategy):
         trend_tf: str = "15min",
         setup_tf: str = "5min",
         entry_tf: str = "1min",
+        rsi_bull: float = _RSI_BULL,
+        rsi_bear: float = _RSI_BEAR,
     ) -> None:
         self._trend_tf = trend_tf
         self._setup_tf = setup_tf
         self._entry_tf = entry_tf
+        self._rsi_bull = rsi_bull
+        self._rsi_bear = rsi_bear
 
     # ------------------------------------------------------------------
     # Strategy ABC properties
@@ -135,12 +139,12 @@ class MomentumConfluenceStrategy(MultiTimeframeStrategy):
         rsi_bearish = False
         if setup_rec is not None and setup_rec.rsi14 is not None:
             rsi = float(setup_rec.rsi14)
-            if rsi > _RSI_BULL:
+            if rsi > self._rsi_bull:
                 rsi_bullish = True
-                reasons.append(f"[{self._setup_tf}] RSI={rsi:.1f} > {_RSI_BULL}")
-            elif rsi < _RSI_BEAR:
+                reasons.append(f"[{self._setup_tf}] RSI={rsi:.1f} > {self._rsi_bull}")
+            elif rsi < self._rsi_bear:
                 rsi_bearish = True
-                reasons.append(f"[{self._setup_tf}] RSI={rsi:.1f} < {_RSI_BEAR}")
+                reasons.append(f"[{self._setup_tf}] RSI={rsi:.1f} < {self._rsi_bear}")
             else:
                 reasons.append(f"[{self._setup_tf}] RSI={rsi:.1f} neutral")
         else:
