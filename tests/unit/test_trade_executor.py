@@ -50,8 +50,9 @@ class TestOpenLong:
     def test_commission_charged_on_actual_value(self, executor):
         pos = executor.open_long("NIFTY 50", _PRICE, _NOW, Decimal("1000000"))
         entry_price = _PRICE * (1 + Decimal("0.0005"))
-        expected_commission = entry_price * pos.quantity * Decimal("0.0003")
-        assert float(pos.entry_commission) == pytest.approx(float(expected_commission), rel=1e-6)
+        # Implementation quantizes commission to the nearest cent
+        expected_commission = (entry_price * pos.quantity * Decimal("0.0003")).quantize(Decimal("0.01"))
+        assert pos.entry_commission == expected_commission
 
     def test_slippage_cost_computed_separately(self, executor):
         pos = executor.open_long("NIFTY 50", _PRICE, _NOW, Decimal("1000000"))
