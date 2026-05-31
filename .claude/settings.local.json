@@ -24,7 +24,9 @@
       "Bash(env/bin/pytest tests/unit/test_event_replay.py tests/unit/test_backpressure.py -q)",
       "Bash(env/bin/pytest tests/unit/test_backpressure.py::TestBackpressureAwareEventBus::test_circuit_breaker_opens_on_repeated_failures -v)",
       "Bash(env/bin/pytest tests/unit/test_backpressure.py::TestBackpressureAwareEventBus::test_circuit_breaker_opens_on_repeated_failures -v --tb=long)",
-      "Bash(env/bin/pytest tests/ -q --tb=no)"
+      "Bash(env/bin/pytest tests/ -q --tb=no)",
+      "Bash(env/bin/pytest tests/unit/test_decision_journal.py tests/unit/test_audit_trail.py tests/unit/test_explainability.py tests/unit/test_pnl_attribution.py tests/unit/test_metrics_engine.py tests/unit/test_alert_engine.py tests/unit/test_correlation_engine.py tests/unit/test_research_analytics.py tests/unit/test_system_health.py -q --tb=short)",
+      "Bash(env/bin/pytest tests/unit/test_decision_journal.py tests/unit/test_audit_trail.py tests/unit/test_explainability.py tests/unit/test_pnl_attribution.py tests/unit/test_metrics_engine.py tests/unit/test_alert_engine.py tests/unit/test_correlation_engine.py tests/unit/test_research_analytics.py tests/unit/test_system_health.py -q --tb=no)"
     ]
   }
 }
