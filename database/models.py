@@ -159,9 +159,49 @@ class TradeSignal(Base):
 
 def create_tables() -> None:
     from database.connection import get_engine
+    from sqlalchemy import text
     from utils.logger import get_logger
     from config import settings
 
     log = get_logger(__name__, settings.log_dir, settings.log_level)
-    Base.metadata.create_all(get_engine())
+    engine = get_engine()
+    Base.metadata.create_all(engine)
+    _migrate_market_indicators(engine, log)
     log.info("Database tables ensured.")
+
+
+# ---------------------------------------------------------------------------
+# Schema migration — adds Phase 4B columns to market_indicators.
+# Uses ADD COLUMN IF NOT EXISTS so it is safe to run on every startup.
+# ---------------------------------------------------------------------------
+
+_PHASE_4B_COLUMNS: list[tuple[str, str]] = [
+    ("atr_14",               "NUMERIC(18,6)"),
+    ("adx_14",               "NUMERIC(8,4)"),
+    ("plus_di",              "NUMERIC(8,4)"),
+    ("minus_di",             "NUMERIC(8,4)"),
+    ("bb_middle",            "NUMERIC(18,6)"),
+    ("bb_upper",             "NUMERIC(18,6)"),
+    ("bb_lower",             "NUMERIC(18,6)"),
+    ("bb_width",             "NUMERIC(10,8)"),
+    ("supertrend",           "NUMERIC(18,6)"),
+    ("supertrend_direction", "INTEGER"),
+    ("obv",                  "NUMERIC(18,2)"),
+    ("stoch_rsi_k",          "NUMERIC(8,4)"),
+    ("stoch_rsi_d",          "NUMERIC(8,4)"),
+]
+
+
+def _migrate_market_indicators(engine, log) -> None:
+    """Add Phase 4B columns to market_indicators if they don't already exist.
+
+    ADD COLUMN IF NOT EXISTS is idempotent — safe to run on every startup.
+    """
+    with engine.begin() as conn:
+        for col_name, col_type in _PHASE_4B_COLUMNS:
+            stmt = text(
+                f"ALTER TABLE market_indicators "
+                f"ADD COLUMN IF NOT EXISTS {col_name} {col_type}"
+            )
+            conn.execute(stmt)
+    log.info("market_indicators Phase 4B columns ensured.")
