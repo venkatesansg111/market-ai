@@ -15,7 +15,16 @@
       "Bash(.venv/bin/pytest tests/unit/test_position_sizer.py tests/unit/test_risk_controls.py tests/unit/test_portfolio_constructor.py tests/unit/test_risk_gate.py tests/unit/test_portfolio_state.py -v)",
       "Bash(/Users/venkatesansg/market-ai/.venv/bin/python -m pytest tests/unit/test_position_sizer.py tests/unit/test_risk_controls.py tests/unit/test_portfolio_constructor.py tests/unit/test_risk_gate.py tests/unit/test_portfolio_state.py -v)",
       "Bash(env/bin/pytest tests/unit/test_position_sizer.py tests/unit/test_risk_controls.py tests/unit/test_portfolio_constructor.py tests/unit/test_risk_gate.py tests/unit/test_portfolio_state.py -v)",
-      "Bash(env/bin/pytest --ignore=tests/integration -q)"
+      "Bash(env/bin/pytest --ignore=tests/integration -q)",
+      "Bash(.venv/bin/python -m pytest tests/unit/test_event_bus_core.py tests/unit/test_candle_builder_engine.py tests/unit/test_streaming_indicator_engine.py tests/unit/test_execution_pipeline_streaming.py tests/unit/test_event_replay.py tests/unit/test_backpressure.py -x -q)",
+      "Bash(env/bin/pytest tests/unit/test_event_bus_core.py tests/unit/test_candle_builder_engine.py tests/unit/test_streaming_indicator_engine.py tests/unit/test_execution_pipeline_streaming.py tests/unit/test_event_replay.py tests/unit/test_backpressure.py -x -q)",
+      "Bash(env/bin/pytest tests/unit/test_event_bus_core.py tests/unit/test_candle_builder_engine.py tests/unit/test_streaming_indicator_engine.py tests/unit/test_execution_pipeline_streaming.py tests/unit/test_event_replay.py tests/unit/test_backpressure.py -q)",
+      "Bash(env/bin/pytest tests/unit/test_execution_pipeline_streaming.py -x -q)",
+      "Bash(env/bin/pytest tests/unit/test_event_replay.py -x -q)",
+      "Bash(env/bin/pytest tests/unit/test_event_replay.py tests/unit/test_backpressure.py -q)",
+      "Bash(env/bin/pytest tests/unit/test_backpressure.py::TestBackpressureAwareEventBus::test_circuit_breaker_opens_on_repeated_failures -v)",
+      "Bash(env/bin/pytest tests/unit/test_backpressure.py::TestBackpressureAwareEventBus::test_circuit_breaker_opens_on_repeated_failures -v --tb=long)",
+      "Bash(env/bin/pytest tests/ -q --tb=no)"
     ]
   }
 }
