@@ -4,13 +4,12 @@ from __future__ import annotations
 
 Requirements:
     - PostgreSQL running (docker compose up -d)
-    - Phase 1 ingestion and Phase 2 indicator pipeline already executed
-      for the test instrument (or conftest inserts synthetic data)
+    - conftest.py seeds synthetic data automatically — no manual ingestion needed
 
 Run with: pytest tests/integration/test_backtest_engine.py -v
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 
 import pytest
@@ -47,7 +46,7 @@ def _minimal_config(
         end_date=end,
         starting_capital=Decimal(str(capital)),
         strategy_name="signal",
-        run_name=f"test_run_{datetime.utcnow().strftime('%H%M%S%f')}",
+        run_name=f"test_run_{datetime.now(tz=timezone.utc).strftime('%H%M%S%f')}",
     )
 
 
@@ -130,7 +129,7 @@ class TestBacktestEngineDB:
             end_date=config1.end_date,
             starting_capital=config1.starting_capital,
             strategy_name=config1.strategy_name,
-            run_name=f"test_run2_{datetime.utcnow().strftime('%H%M%S%f')}",
+            run_name=f"test_run2_{datetime.now(tz=timezone.utc).strftime('%H%M%S%f')}",
         )
         engine = BacktestEngine()
         r1 = engine.run(config1)

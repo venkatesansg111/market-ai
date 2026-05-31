@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Optional
 
@@ -356,7 +356,7 @@ class BacktestEngine:
 
     @staticmethod
     def _auto_run_name(config: BacktestConfig) -> str:
-        ts = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        ts = datetime.now(tz=timezone.utc).strftime("%Y%m%d_%H%M%S")
         instr = config.instrument.replace(" ", "_").replace("/", "-")
         return f"{config.strategy_name}_{instr}_{config.timeframe}_{ts}"
 
