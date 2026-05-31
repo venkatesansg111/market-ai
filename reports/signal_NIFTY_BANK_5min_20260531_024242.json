@@ -1,0 +1,557 @@
+{
+  "run_name": "signal_NIFTY_BANK_5min_20260531_024242",
+  "strategy_name": "signal",
+  "instrument": "NIFTY BANK",
+  "timeframe": "5min",
+  "start_date": "2026-04-01T00:00:00",
+  "end_date": "2026-05-31T00:00:00",
+  "performance": {
+    "starting_capital": 500000.0,
+    "ending_capital": 500000.0,
+    "total_return_pct": 0.0,
+    "cagr_pct": 0.0,
+    "max_drawdown_pct": 0.0,
+    "sharpe_ratio": 0.0,
+    "sortino_ratio": 0.0,
+    "calmar_ratio": 0.0,
+    "recovery_factor": 0.0
+  },
+  "trade_statistics": {
+    "total_trades": 0,
+    "winning_trades": 0,
+    "losing_trades": 0,
+    "win_rate_pct": 0.0,
+    "profit_factor": 0.0,
+    "expectancy": 0.0,
+    "avg_winner": 0.0,
+    "avg_loser": 0.0,
+    "avg_holding_minutes": 0.0,
+    "longest_win_streak": 0,
+    "longest_loss_streak": 0
+  },
+  "monthly_returns": {
+    "2026-04": 0.0,
+    "2026-05": 0.0
+  },
+  "yearly_returns": {
+    "2026": 0.0
+  },
+  "trades": [],
+  "equity_curve_sample": [
+    {
+      "time": "2026-04-01T03:45:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-01T06:00:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-01T08:15:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-02T04:15:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-02T06:30:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-02T08:45:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-06T04:45:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-06T07:00:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-06T09:15:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-07T05:15:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-07T07:30:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-07T09:45:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-08T05:45:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-08T08:00:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-09T04:00:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-09T06:15:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-09T08:30:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-10T04:30:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-10T06:45:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-10T09:00:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-13T05:00:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-13T07:15:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-13T09:30:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-15T05:30:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-15T07:45:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-16T03:45:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-16T06:00:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-16T08:15:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-17T04:15:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-17T06:30:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-17T08:45:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-21T04:20:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-21T06:35:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-21T08:50:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-22T04:50:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-22T07:05:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-22T09:20:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-23T05:20:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-23T07:35:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-23T09:50:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-24T05:50:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-24T08:05:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-27T04:05:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-27T06:20:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-27T08:35:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-28T04:35:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-28T06:50:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-28T09:05:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-29T05:05:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-29T07:20:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-04-29T09:35:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-04T05:35:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-04T07:50:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-05T03:50:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-05T06:05:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-05T08:20:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-06T04:20:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-06T06:35:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-06T08:50:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-07T04:50:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-07T07:05:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-07T09:20:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-08T05:20:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-08T07:35:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-08T09:50:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-11T05:50:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-11T08:05:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-12T04:05:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-12T06:20:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-12T08:35:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-13T04:35:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-13T06:50:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-13T09:05:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-14T05:05:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-14T07:20:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-14T09:35:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-15T05:35:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-15T07:50:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-18T03:50:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-18T06:05:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-18T08:20:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-19T04:20:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-19T06:35:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-19T08:50:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-20T04:50:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-20T07:05:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-20T09:20:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-21T05:20:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-21T07:35:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-21T09:50:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-22T05:50:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-22T08:05:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-25T04:05:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-25T06:20:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-25T08:35:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-26T04:35:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-26T06:50:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-26T09:05:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-27T05:05:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-27T07:20:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-27T09:35:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-29T05:35:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    },
+    {
+      "time": "2026-05-29T07:50:00",
+      "equity": 500000.0,
+      "drawdown_pct": 0.0
+    }
+  ]
+}

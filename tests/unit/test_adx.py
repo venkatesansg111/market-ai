@@ -122,15 +122,22 @@ class TestDirectionalBias:
 
 class TestTrendStrength:
     def test_strong_trend_produces_higher_adx_than_weak_trend(self):
-        # Compare ADX at the point just after warmup (before either series saturates
-        # at 100). A "strong" trend has a high step relative to the ATR-range;
-        # a "weak" trend has a small step.  We compare the mean across the first
-        # 10 bars after warmup to avoid ceiling effects.
-        strong = _trend_df("up", n=60, step=5.0)
-        weak = _trend_df("up", n=60, step=0.1)
+        # Use zigzag data so both +DM and -DM are non-zero, preventing DX from
+        # immediately saturating at 100 for both series. A strong trend has large
+        # up-moves relative to down-moves; a weak trend has smaller up-moves with
+        # the same down-move amplitude, producing genuinely lower ADX values.
+        def _zigzag_df(n: int, up_step: float, down_step: float = 0.5):
+            prices = [100.0]
+            for i in range(1, n):
+                prices.append(prices[-1] + up_step if i % 2 == 0 else prices[-1] - down_step)
+            highs = [p + 0.1 for p in prices]
+            lows = [p - 0.1 for p in prices]
+            return make_df(highs, lows, prices)
+
+        strong = _zigzag_df(n=60, up_step=4.0, down_step=0.5)
+        weak = _zigzag_df(n=60, up_step=0.6, down_step=0.5)
         adx_strong, _, _ = calculate_adx(strong, 14)
         adx_weak, _, _ = calculate_adx(weak, 14)
-        # Take the earliest 10 valid bars to compare before ADX maxes out
         valid_strong = adx_strong.dropna().iloc[:10]
         valid_weak = adx_weak.dropna().iloc[:10]
         if len(valid_strong) == 0 or len(valid_weak) == 0:
