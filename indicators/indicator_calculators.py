@@ -23,8 +23,11 @@ def calculate_rsi(closes: pd.Series, period: int = 14) -> pd.Series:
     loss = -delta.clip(upper=0.0)
     avg_gain = gain.ewm(alpha=1.0 / period, adjust=False, min_periods=period).mean()
     avg_loss = loss.ewm(alpha=1.0 / period, adjust=False, min_periods=period).mean()
-    rs = avg_gain / avg_loss.replace(0.0, float("nan"))
-    return 100.0 - (100.0 / (1.0 + rs))
+    # When avg_loss==0 but avg_gain>0, RSI is 100 (no down moves at all).
+    # When both are 0 (flat series), keep NaN.
+    rsi = 100.0 - (100.0 / (1.0 + avg_gain / avg_loss.replace(0.0, float("nan"))))
+    rsi = rsi.where(avg_loss != 0.0, other=avg_gain.apply(lambda g: 100.0 if g > 0 else float("nan")))
+    return rsi
 
 
 def calculate_vwap_session(df: pd.DataFrame) -> pd.Series:

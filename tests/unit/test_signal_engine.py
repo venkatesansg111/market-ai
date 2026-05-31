@@ -80,7 +80,7 @@ class TestStrongSellSignal:
         result = engine.evaluate_signal(rec, PRICE_BELOW_VWAP)
         assert result.signal_type == SignalType.STRONG_SELL
 
-    def test_strong_sell_confidence_above_80(self):
+    def test_strong_sell_confidence_below_20(self):
         engine = SignalEngineService()
         rec = make_rec(
             ema20=Decimal("22000"),
@@ -91,7 +91,9 @@ class TestStrongSellSignal:
             macd_signal=Decimal("-30"),
         )
         result = engine.evaluate_signal(rec, PRICE_BELOW_VWAP)
-        assert result.confidence > 80
+        # Confidence scale: 0=max bearish, 50=neutral, 100=max bullish.
+        # All-bearish components sum to -100 → confidence = 50 + (-100)//2 = 0.
+        assert result.confidence < 20
 
 
 class TestSellSignal:

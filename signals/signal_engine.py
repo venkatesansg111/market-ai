@@ -186,16 +186,20 @@ class SignalEngineService:
         if ema20_gt_50 and ema50_gt_200 and rsi > 60 and price_gt_vwap and macd_bullish:
             return SignalType.STRONG_BUY
 
-        # BUY: EMA20>50, RSI>55, Price>VWAP
+        # BUY: EMA20>50, RSI>55, Price>VWAP (conflicting MACD → NO_TRADE)
         if ema20_gt_50 and rsi > 55 and price_gt_vwap:
+            if macd_bearish:
+                return SignalType.NO_TRADE
             return SignalType.BUY
 
         # STRONG_SELL: all 5 bearish conditions
         if ema20_lt_50 and ema50_lt_200 and rsi < 40 and price_lt_vwap and macd_bearish:
             return SignalType.STRONG_SELL
 
-        # SELL: EMA20<50, RSI<45, Price<VWAP
+        # SELL: EMA20<50, RSI<45, Price<VWAP (conflicting MACD → NO_TRADE)
         if ema20_lt_50 and rsi < 45 and price_lt_vwap:
+            if macd_bullish:
+                return SignalType.NO_TRADE
             return SignalType.SELL
 
         # Conflicting indicators or insufficient data

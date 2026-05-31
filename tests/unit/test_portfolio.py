@@ -152,7 +152,7 @@ class TestMarkToMarket:
         new_price = Decimal("20000")
         portfolio.mark_to_market({_INSTR: new_price})
         expected_equity = portfolio.cash + new_price * pos.quantity
-        assert portfolio.equity == pytest.approx(float(expected_equity), rel=1e-8)
+        assert float(portfolio.equity) == pytest.approx(float(expected_equity), rel=1e-8)
 
     def test_unrealized_pnl_reflects_price_change(self, portfolio, executor):
         pos = executor.open_long(_INSTR, _PRICE, _NOW, _CAPITAL)
