@@ -8,6 +8,8 @@ import pandas as pd
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
+from datetime import timedelta
+
 from backtesting.backtest_models import BacktestConfig, BacktestResult, Trade, TradeAction
 from backtesting.performance import PerformanceEngine
 from backtesting.portfolio import Portfolio
@@ -203,6 +205,7 @@ class BacktestEngine:
 
         indicator_data = {
             r.candle_time: {
+                # Phase 1
                 "ema20": float(r.ema20) if r.ema20 is not None else None,
                 "ema50": float(r.ema50) if r.ema50 is not None else None,
                 "ema200": float(r.ema200) if r.ema200 is not None else None,
@@ -210,6 +213,20 @@ class BacktestEngine:
                 "vwap": float(r.vwap) if r.vwap is not None else None,
                 "macd": float(r.macd) if r.macd is not None else None,
                 "macd_signal": float(r.macd_signal) if r.macd_signal is not None else None,
+                # Phase 4B
+                "atr_14": float(r.atr_14) if r.atr_14 is not None else None,
+                "adx_14": float(r.adx_14) if r.adx_14 is not None else None,
+                "plus_di": float(r.plus_di) if r.plus_di is not None else None,
+                "minus_di": float(r.minus_di) if r.minus_di is not None else None,
+                "bb_middle": float(r.bb_middle) if r.bb_middle is not None else None,
+                "bb_upper": float(r.bb_upper) if r.bb_upper is not None else None,
+                "bb_lower": float(r.bb_lower) if r.bb_lower is not None else None,
+                "bb_width": float(r.bb_width) if r.bb_width is not None else None,
+                "supertrend": float(r.supertrend) if r.supertrend is not None else None,
+                "supertrend_direction": int(r.supertrend_direction) if r.supertrend_direction is not None else None,
+                "obv": float(r.obv) if r.obv is not None else None,
+                "stoch_rsi_k": float(r.stoch_rsi_k) if r.stoch_rsi_k is not None else None,
+                "stoch_rsi_d": float(r.stoch_rsi_d) if r.stoch_rsi_d is not None else None,
             }
             for r in indicator_rows
         }
@@ -240,10 +257,12 @@ class BacktestEngine:
         candle_time,
     ) -> IndicatorRecord:
         ts = candle_time.to_pydatetime() if hasattr(candle_time, "to_pydatetime") else candle_time
+        sd = row.get("supertrend_direction")
         return IndicatorRecord(
             instrument=instrument,
             candle_time=ts,
             timeframe=timeframe,
+            # Phase 1
             ema20=_to_dec(row.get("ema20")),
             ema50=_to_dec(row.get("ema50")),
             ema200=_to_dec(row.get("ema200")),
@@ -251,29 +270,133 @@ class BacktestEngine:
             vwap=_to_dec(row.get("vwap")),
             macd=_to_dec(row.get("macd")),
             macd_signal=_to_dec(row.get("macd_signal")),
+            # Phase 4B
+            atr_14=_to_dec(row.get("atr_14")),
+            adx_14=_to_dec(row.get("adx_14")),
+            plus_di=_to_dec(row.get("plus_di")),
+            minus_di=_to_dec(row.get("minus_di")),
+            bb_middle=_to_dec(row.get("bb_middle")),
+            bb_upper=_to_dec(row.get("bb_upper")),
+            bb_lower=_to_dec(row.get("bb_lower")),
+            bb_width=_to_dec(row.get("bb_width")),
+            supertrend=_to_dec(row.get("supertrend")),
+            supertrend_direction=int(sd) if sd is not None else None,
+            obv=_to_dec(row.get("obv")),
+            stoch_rsi_k=_to_dec(row.get("stoch_rsi_k")),
+            stoch_rsi_d=_to_dec(row.get("stoch_rsi_d")),
         )
 
     # ------------------------------------------------------------------
     # Strategy factory
     # ------------------------------------------------------------------
 
-    @staticmethod
-    def _build_strategy(config: BacktestConfig) -> Strategy:
+    def _build_strategy(self, config: BacktestConfig) -> Strategy:
         name = config.strategy_name.lower()
         if name == "signal":
             return SignalToTradeAdapter()
-        # Delegate to the Phase 4 strategy registry
+
         from strategies.registry import get_strategy, list_strategies
         from strategies.backtest_adapter import StrategyBacktestAdapter
+        from strategies.multi_timeframe_base import MultiTimeframeStrategy
+        from strategies.backtest_mtf_adapter import MultiTimeframeBacktestAdapter
+        from confluence.timeframe_alignment import TimeframeAlignmentService
+
         try:
             strat = get_strategy(name)
-            return StrategyBacktestAdapter(strat)
         except KeyError:
             available = ["signal"] + list_strategies()
             raise ValueError(
                 f"Unknown strategy '{config.strategy_name}'. "
                 f"Available strategies: {', '.join(available)}"
             )
+
+        if isinstance(strat, MultiTimeframeStrategy):
+            # Override strategy timeframes from CLI if provided
+            if config.trend_timeframe:
+                strat._trend_tf = config.trend_timeframe
+            if config.setup_timeframe:
+                strat._setup_tf = config.setup_timeframe
+            if config.entry_timeframe:
+                strat._entry_tf = config.entry_timeframe
+
+            all_indicators = self._load_mtf_indicators(config, strat)
+            return MultiTimeframeBacktestAdapter(
+                strategy=strat,
+                all_indicators=all_indicators,
+                alignment_service=TimeframeAlignmentService(),
+            )
+
+        return StrategyBacktestAdapter(strat)
+
+    def _load_mtf_indicators(
+        self,
+        config: BacktestConfig,
+        strategy: "MultiTimeframeStrategy",
+    ) -> dict[str, list[IndicatorRecord]]:
+        """Load IndicatorRecord lists for all timeframes required by an MTF strategy.
+
+        Fetches a 30-day buffer before ``config.start_date`` so that
+        alignment can find valid higher-timeframe bars even at the very
+        start of the backtest window.
+        """
+        timeframes = {
+            strategy.trend_timeframe,
+            strategy.setup_timeframe,
+            strategy.entry_timeframe,
+        }
+        buffer_start = config.start_date - timedelta(days=30)
+        result: dict[str, list[IndicatorRecord]] = {}
+
+        for tf in timeframes:
+            with get_session() as session:
+                rows = session.execute(
+                    select(MarketIndicator)
+                    .where(
+                        MarketIndicator.instrument == config.instrument,
+                        MarketIndicator.timeframe == tf,
+                        MarketIndicator.candle_time >= buffer_start,
+                        MarketIndicator.candle_time <= config.end_date,
+                    )
+                    .order_by(MarketIndicator.candle_time.asc())
+                ).scalars().all()
+
+            result[tf] = [self._db_row_to_indicator(row) for row in rows]
+            logger.info(
+                "[BacktestEngine] Loaded %d indicator rows for %s %s",
+                len(result[tf]), config.instrument, tf,
+            )
+
+        return result
+
+    @staticmethod
+    def _db_row_to_indicator(row: MarketIndicator) -> IndicatorRecord:
+        """Convert a ``MarketIndicator`` ORM row to an ``IndicatorRecord`` with all fields."""
+        sd = row.supertrend_direction
+        return IndicatorRecord(
+            instrument=row.instrument,
+            candle_time=row.candle_time,
+            timeframe=row.timeframe,
+            ema20=_to_dec(row.ema20),
+            ema50=_to_dec(row.ema50),
+            ema200=_to_dec(row.ema200),
+            rsi14=_to_dec(row.rsi14),
+            vwap=_to_dec(row.vwap),
+            macd=_to_dec(row.macd),
+            macd_signal=_to_dec(row.macd_signal),
+            atr_14=_to_dec(row.atr_14),
+            adx_14=_to_dec(row.adx_14),
+            plus_di=_to_dec(row.plus_di),
+            minus_di=_to_dec(row.minus_di),
+            bb_middle=_to_dec(row.bb_middle),
+            bb_upper=_to_dec(row.bb_upper),
+            bb_lower=_to_dec(row.bb_lower),
+            bb_width=_to_dec(row.bb_width),
+            supertrend=_to_dec(row.supertrend),
+            supertrend_direction=int(sd) if sd is not None else None,
+            obv=_to_dec(row.obv),
+            stoch_rsi_k=_to_dec(row.stoch_rsi_k),
+            stoch_rsi_d=_to_dec(row.stoch_rsi_d),
+        )
 
     # ------------------------------------------------------------------
     # Database persistence

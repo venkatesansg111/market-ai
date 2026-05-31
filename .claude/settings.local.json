@@ -5,7 +5,12 @@
       "Bash(python3 *)",
       "Bash(pip list *)",
       "Read(//c//**)",
-      "Bash(ls /c)"
+      "Bash(ls /c)",
+      "Bash(pip show *)",
+      "Bash(venv/bin/python -m pytest tests/unit/ -v --tb=short)",
+      "Bash(/Users/venkatesansg/market-ai/env/bin/python --version)",
+      "Bash(env/bin/python *)",
+      "Bash(env/bin/pip install *)"
     ]
   }
 }

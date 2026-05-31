@@ -5,7 +5,10 @@ import pytest
 from strategies.ema_crossover import EmaCrossoverStrategy
 from strategies.mean_reversion import MeanReversionStrategy
 from strategies.momentum import MomentumStrategy
+from strategies.momentum_confluence import MomentumConfluenceStrategy
 from strategies.registry import STRATEGIES, get_strategy, list_strategies
+from strategies.supertrend_confluence import SupertrendConfluenceStrategy
+from strategies.trend_confluence import TrendConfluenceStrategy
 from strategies.vwap_breakout import VWAPBreakoutStrategy
 
 
@@ -22,6 +25,15 @@ class TestGetStrategy:
     def test_mean_reversion_returns_mean_reversion(self):
         assert isinstance(get_strategy("mean_reversion"), MeanReversionStrategy)
 
+    def test_trend_confluence_returns_trend_confluence(self):
+        assert isinstance(get_strategy("trend_confluence"), TrendConfluenceStrategy)
+
+    def test_supertrend_confluence_returns_supertrend_confluence(self):
+        assert isinstance(get_strategy("supertrend_confluence"), SupertrendConfluenceStrategy)
+
+    def test_momentum_confluence_returns_momentum_confluence(self):
+        assert isinstance(get_strategy("momentum_confluence"), MomentumConfluenceStrategy)
+
     def test_lookup_is_case_insensitive(self):
         assert get_strategy("EMA") is get_strategy("ema")
         assert get_strategy("VWAP") is get_strategy("vwap")
@@ -37,12 +49,15 @@ class TestGetStrategy:
 
 
 class TestListStrategies:
-    def test_returns_all_four_names(self):
+    def test_returns_all_strategy_names(self):
         names = list_strategies()
-        assert set(names) == {"ema", "vwap", "momentum", "mean_reversion"}
+        assert set(names) == {
+            "ema", "vwap", "momentum", "mean_reversion",
+            "trend_confluence", "supertrend_confluence", "momentum_confluence",
+        }
 
-    def test_returns_exactly_four(self):
-        assert len(list_strategies()) == 4
+    def test_returns_exactly_seven(self):
+        assert len(list_strategies()) == 7
 
     def test_returns_list_type(self):
         assert isinstance(list_strategies(), list)

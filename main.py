@@ -18,6 +18,12 @@ Phase 3 — Backtesting:
     python main.py --mode backtest --instruments "NIFTY 50" --timeframes 1day
     python main.py --mode backtest --strategy signal --capital 1000000
     python main.py --mode backtest --from-date 2023-01-01 --to-date 2024-01-01
+
+Phase 4C — Multi-Timeframe Backtesting:
+    python main.py --mode backtest --strategy trend_confluence --trend-timeframe 1day --setup-timeframe 15min --entry-timeframe 5min
+    python main.py --mode backtest --strategy supertrend_confluence --instruments "NIFTY 50" --timeframes 5min
+    python main.py --mode backtest --strategy momentum_confluence --trend-timeframe 15min --setup-timeframe 5min --entry-timeframe 1min
+    python main.py --list-strategies
 """
 
 import argparse
@@ -112,6 +118,25 @@ def _parse_args() -> argparse.Namespace:
         action="store_true",
         default=False,
         help="List all available backtest strategies and exit",
+    )
+    # Phase 4C — multi-timeframe timeframe overrides
+    parser.add_argument(
+        "--trend-timeframe",
+        dest="trend_timeframe",
+        default="",
+        help="Trend timeframe override for MTF strategies (e.g. 1day)",
+    )
+    parser.add_argument(
+        "--setup-timeframe",
+        dest="setup_timeframe",
+        default="",
+        help="Setup timeframe override for MTF strategies (e.g. 15min)",
+    )
+    parser.add_argument(
+        "--entry-timeframe",
+        dest="entry_timeframe",
+        default="",
+        help="Entry timeframe override for MTF strategies (e.g. 5min)",
     )
     return parser.parse_args()
 
@@ -268,6 +293,9 @@ def _run_backtest(args: argparse.Namespace) -> None:
         starting_capital=Decimal(str(args.capital)),
         strategy_name=args.strategy,
         run_name=args.run_name,
+        trend_timeframe=args.trend_timeframe,
+        setup_timeframe=args.setup_timeframe,
+        entry_timeframe=args.entry_timeframe,
     )
 
     logger.info("=" * 55)

@@ -35,6 +35,10 @@ class BacktestConfig:
     max_drawdown_pct: Decimal = field(default=Decimal("0.15"))
     max_daily_loss_pct: Decimal = field(default=Decimal("0.02"))
     max_open_trades: int = 1
+    # Phase 4C — multi-timeframe fields (empty string = not an MTF backtest)
+    trend_timeframe: str = ""
+    setup_timeframe: str = ""
+    entry_timeframe: str = ""
 
 
 @dataclass(frozen=True)

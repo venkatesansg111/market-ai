@@ -4,6 +4,9 @@ from strategies.base import Strategy
 from strategies.ema_crossover import EmaCrossoverStrategy
 from strategies.mean_reversion import MeanReversionStrategy
 from strategies.momentum import MomentumStrategy
+from strategies.momentum_confluence import MomentumConfluenceStrategy
+from strategies.supertrend_confluence import SupertrendConfluenceStrategy
+from strategies.trend_confluence import TrendConfluenceStrategy
 from strategies.vwap_breakout import VWAPBreakoutStrategy
 
 # Module-level singletons — strategies are stateless so one instance per type is safe.
@@ -12,6 +15,10 @@ STRATEGIES: dict[str, Strategy] = {
     "vwap": VWAPBreakoutStrategy(),
     "momentum": MomentumStrategy(),
     "mean_reversion": MeanReversionStrategy(),
+    # Phase 4C — multi-timeframe confluence strategies
+    "trend_confluence": TrendConfluenceStrategy(),
+    "supertrend_confluence": SupertrendConfluenceStrategy(),
+    "momentum_confluence": MomentumConfluenceStrategy(),
 }
 
 
