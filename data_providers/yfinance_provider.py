@@ -25,12 +25,14 @@ _YF_INTERVAL_MAP: dict[Timeframe, str] = {
     Timeframe.DAY_1: "1d",
 }
 
-# Hard limits imposed by Yahoo Finance per timeframe
+# Hard limits imposed by Yahoo Finance per timeframe.
+# Intraday limits are strict API constraints.
+# Daily has no real API limit — Yahoo Finance provides 10+ years; 3650 is a safe cap.
 _YF_MAX_DAYS: dict[Timeframe, int] = {
     Timeframe.MIN_1: 7,
     Timeframe.MIN_5: 60,
     Timeframe.MIN_15: 60,
-    Timeframe.DAY_1: 730,
+    Timeframe.DAY_1: 3650,
 }
 
 # Maps our canonical instrument names → Yahoo Finance tickers
